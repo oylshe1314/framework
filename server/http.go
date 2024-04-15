@@ -104,41 +104,24 @@ func (this *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	this.sm.ServeHTTP(w, r)
 }
 
-func (this *HttpServer) ServeFile(w http.ResponseWriter, r *http.Request) {
-	var path = r.URL.Path
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			http.NotFound(w, r)
-			return
-		}
-
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if fi.IsDir() {
-		http.NotFound(w, r)
-		return
-	}
-
-	http.ServeFile(w, r, path)
+func (this *HttpServer) FlatHandler(pattern string, handler http.Handler) {
+	this.sm.Handle(pattern, handler)
 }
 
 func (this *HttpServer) Handler(pattern string, handler MessageHandler) {
-	this.sm.Handle(pattern, handler)
+	this.FlatHandler(pattern, handler)
 }
 
 func (this *HttpServer) PostHandler(pattern string, handler PostHandler) {
-	this.sm.Handle(pattern, handler)
+	this.FlatHandler(pattern, handler)
 }
 
 func (this *HttpServer) GetHandler(pattern string, handler GetHandler) {
-	this.sm.Handle(pattern, handler)
+	this.FlatHandler(pattern, handler)
 }
 
 func (this *HttpServer) FileHandler(pattern string) {
-	this.sm.Handle(pattern, FileHandler(this.ServeFile))
+	this.GetHandler(pattern, FileHandler())
 }
 
 func (this *HttpServer) Init() (err error) {
@@ -174,7 +157,8 @@ func (this *HttpServer) detect(msg *Message) {
 	ack.Pid = os.Getpid()
 	ack.Coroutine = runtime.NumGoroutine()
 
-	if runtime.GOOS == "linux" {
+	switch runtime.GOOS {
+	case "linux", "unix", "darwin", "freebsd":
 		result, err := exec.Command(fmt.Sprintf("ps -aux | grep -w %d", ack.Pid)).Output()
 		if err == nil {
 			var pid = util.IntegerToString(ack.Pid)

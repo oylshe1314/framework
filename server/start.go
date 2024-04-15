@@ -103,11 +103,11 @@ func run(svr Server) int {
 
 	var logger = svr.Logger()
 
+	logger.Info("Server start")
 	logger.Info("Program-Hash: ", ProgramHash)
 	logger.Info("Data-Hash: ", DataHash)
 	logger.Info("Config-Hash: ", ConfigHash)
 	logger.Info("Profile-Active: ", profile.Active)
-	logger.Info("Server start")
 	go func(pCode *int) {
 		err := svr.Serve()
 		if err == nil {

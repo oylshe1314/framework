@@ -4,6 +4,7 @@ import (
 	"framework/errors"
 	"framework/log"
 	"framework/util"
+	"time"
 )
 
 type Server interface {
@@ -86,6 +87,7 @@ func (this *LoggerServer) Init() (err error) {
 
 func (this *LoggerServer) Close() (err error) {
 	if this.logger != nil {
+		time.Sleep(time.Second)
 		err = this.logger.Close()
 		this.logger = nil
 	}

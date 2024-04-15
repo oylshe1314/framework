@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 type Message struct {
@@ -146,8 +147,25 @@ func (handler GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	MessageHandler(handler).ServeHTTP(w, r)
 }
 
-type FileHandler func(w http.ResponseWriter, r *http.Request)
+func FileHandler() GetHandler {
+	return func(msg *Message) {
+		var path = msg.R.URL.Path
+		fi, err := os.Stat(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.NotFound(msg.W, msg.R)
+				return
+			}
 
-func (handler FileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler(w, r)
+			http.Error(msg.W, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if fi.IsDir() {
+			http.NotFound(msg.W, msg.R)
+			return
+		}
+
+		http.ServeFile(msg.W, msg.R, path)
+	}
 }
