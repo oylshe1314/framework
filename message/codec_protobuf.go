@@ -1,5 +1,10 @@
 package message
 
+import (
+	"framework/errors"
+	"google.golang.org/protobuf/proto"
+)
+
 type protobufCodec struct {
 	base[*protobufCodec]
 }
@@ -8,10 +13,19 @@ func NewProtobufCodec() Codec {
 	return &protobufCodec{}
 }
 
-func (p *protobufCodec) encode(msg interface{}) ([]byte, error) {
-	panic("implement me")
+func (*protobufCodec) encode(msg interface{}) ([]byte, error) {
+	p, ok := msg.(proto.Message)
+	if !ok {
+		return nil, errors.Error("not protobuf message")
+	}
+	return proto.Marshal(p)
 }
 
-func (p *protobufCodec) decode(buf []byte, msg interface{}) error {
-	panic("implement me")
+func (*protobufCodec) decode(buf []byte, msg interface{}) error {
+	switch p := msg.(type) {
+	case proto.Message:
+		return proto.Unmarshal(buf, p)
+	default:
+		return errors.Error("not protobuf message")
+	}
 }

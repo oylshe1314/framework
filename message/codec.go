@@ -52,11 +52,23 @@ type stringCodec struct {
 }
 
 func (*stringCodec) encode(msg interface{}) ([]byte, error) {
-	return nil, errors.Error("non-string")
+	switch p := msg.(type) {
+	case string:
+		return []byte(p), nil
+	case *string:
+		return []byte(*p), nil
+	default:
+		return nil, errors.Error("non-string")
+	}
 }
 
 func (*stringCodec) decode(buf []byte, msg interface{}) error {
-	return errors.Error("non-string-pointer")
+	p, ok := msg.(*string)
+	if !ok {
+		return errors.Error("non-string-pointer")
+	}
+	*p = string(buf)
+	return nil
 }
 
 var DefaultCodec Codec = &stringCodec{}
