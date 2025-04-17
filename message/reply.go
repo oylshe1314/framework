@@ -1,6 +1,6 @@
 package message
 
-import "framework/errors"
+import "github.com/oylshe1314/framework/errors"
 
 type Reply struct {
 	Status  int         `json:"status"`

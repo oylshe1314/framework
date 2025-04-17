@@ -1,8 +1,8 @@
 package server
 
 import (
-	"framework/log"
-	. "framework/net"
+	"github.com/oylshe1314/framework/log"
+	. "github.com/oylshe1314/framework/net"
 	"runtime/debug"
 )
 

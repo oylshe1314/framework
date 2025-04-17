@@ -2,11 +2,11 @@ package client
 
 import (
 	"bytes"
-	"framework/errors"
-	"framework/log"
-	"framework/message"
-	"framework/util"
 	json "github.com/json-iterator/go"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/message"
+	"github.com/oylshe1314/framework/util"
 	"net/http"
 	"net/url"
 	"time"

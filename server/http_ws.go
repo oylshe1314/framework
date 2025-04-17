@@ -1,8 +1,8 @@
 package server
 
 import (
-	. "framework/http/ws"
 	"github.com/gorilla/websocket"
+	. "github.com/oylshe1314/framework/http/ws"
 	"net/http"
 )
 

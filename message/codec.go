@@ -1,6 +1,6 @@
 package message
 
-import "framework/errors"
+import "github.com/oylshe1314/framework/errors"
 
 type Codec interface {
 	Encode(msg interface{}) ([]byte, error)

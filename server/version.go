@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"framework/log"
+	"github.com/oylshe1314/framework/log"
 	"io"
 	"runtime"
 )

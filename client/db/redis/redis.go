@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 	"reflect"
 	"strconv"
 )

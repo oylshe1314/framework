@@ -3,8 +3,8 @@ package log
 import (
 	"bytes"
 	"fmt"
-	"framework/util"
 	frl "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/oylshe1314/framework/util"
 	"github.com/sirupsen/logrus"
 	"io"
 	nativeLog "log"

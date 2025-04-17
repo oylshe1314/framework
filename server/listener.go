@@ -1,8 +1,8 @@
 package server
 
 import (
-	"framework/errors"
-	"framework/util"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/util"
 	"net"
 )
 

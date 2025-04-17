@@ -1,9 +1,9 @@
 package client
 
 import (
-	"framework/errors"
-	"framework/log"
-	. "framework/net"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	. "github.com/oylshe1314/framework/net"
 	"net"
 )
 

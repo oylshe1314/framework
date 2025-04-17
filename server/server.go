@@ -1,9 +1,9 @@
 package server
 
 import (
-	"framework/errors"
-	"framework/log"
-	"framework/util"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/util"
 	"time"
 )
 

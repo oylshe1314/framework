@@ -1,7 +1,7 @@
 package http
 
 import (
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 	"reflect"
 	"strconv"
 	"strings"

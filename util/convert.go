@@ -1,7 +1,7 @@
 package util
 
 import (
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 	"strconv"
 	"strings"
 )

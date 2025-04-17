@@ -1,10 +1,10 @@
 package ws
 
 import (
-	"framework/log"
-	"framework/message"
-	"framework/util"
 	"github.com/gorilla/websocket"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/message"
+	"github.com/oylshe1314/framework/util"
 	"io"
 	"runtime/debug"
 	"sync"

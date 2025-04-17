@@ -1,9 +1,9 @@
 package http
 
 import (
-	"framework/errors"
-	"framework/message"
 	json "github.com/json-iterator/go"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/message"
 	"io"
 	"mime"
 	"mime/multipart"

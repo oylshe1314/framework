@@ -1,7 +1,7 @@
 package message
 
 import (
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 	"google.golang.org/protobuf/proto"
 )
 

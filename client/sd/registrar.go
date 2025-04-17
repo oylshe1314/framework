@@ -1,10 +1,10 @@
 package sd
 
 import (
-	"framework/client"
-	"framework/log"
-	"framework/server"
-	"framework/util"
+	"github.com/oylshe1314/framework/client"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/server"
+	"github.com/oylshe1314/framework/util"
 )
 
 type ServiceNetwork struct {

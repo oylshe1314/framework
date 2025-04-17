@@ -1,4 +1,4 @@
-module framework
+module github.com/oylshe1314/framework
 
 go 1.21
 

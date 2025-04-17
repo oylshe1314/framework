@@ -1,8 +1,8 @@
 package db
 
 import (
-	"framework/errors"
-	"framework/util"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

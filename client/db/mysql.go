@@ -2,9 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"framework/errors"
-	"framework/util"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/util"
 	"time"
 )
 

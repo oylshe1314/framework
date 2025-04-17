@@ -1,8 +1,8 @@
 package db
 
 import (
-	"framework/client/db/redis"
-	"framework/util"
+	"github.com/oylshe1314/framework/client/db/redis"
+	"github.com/oylshe1314/framework/util"
 )
 
 type RedisClient struct {

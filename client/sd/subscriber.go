@@ -1,8 +1,8 @@
 package sd
 
 import (
-	"framework/client"
-	"framework/log"
+	"github.com/oylshe1314/framework/client"
+	"github.com/oylshe1314/framework/log"
 )
 
 type SubscribeCallback func(service string, nodes []*ServiceNode)

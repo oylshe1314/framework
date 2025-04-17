@@ -1,12 +1,12 @@
 package rpc
 
 import (
-	"framework/client"
-	"framework/client/sd"
-	"framework/errors"
-	"framework/log"
-	"framework/message"
-	"framework/util"
+	"github.com/oylshe1314/framework/client"
+	"github.com/oylshe1314/framework/client/sd"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/message"
+	"github.com/oylshe1314/framework/util"
 	"math/rand"
 	"net/url"
 	"sync"

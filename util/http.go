@@ -2,8 +2,8 @@ package util
 
 import (
 	"bytes"
-	"framework/errors"
 	json "github.com/json-iterator/go"
+	"github.com/oylshe1314/framework/errors"
 	"net/http"
 	"net/url"
 	"strings"

@@ -2,9 +2,9 @@ package zk
 
 import (
 	"context"
-	"framework/errors"
-	"framework/log"
 	"github.com/go-zookeeper/zk"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
 	"time"
 )
 

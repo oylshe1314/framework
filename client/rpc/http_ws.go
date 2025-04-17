@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"framework/client"
-	"framework/client/sd"
+	"github.com/oylshe1314/framework/client"
+	"github.com/oylshe1314/framework/client/sd"
 )
 
 type WebSocketRpcNode struct {

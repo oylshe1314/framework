@@ -1,9 +1,9 @@
 package client
 
 import (
-	"framework/errors"
-	. "framework/http/ws"
 	"github.com/gorilla/websocket"
+	"github.com/oylshe1314/framework/errors"
+	. "github.com/oylshe1314/framework/http/ws"
 	"net/url"
 )
 

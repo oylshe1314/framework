@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 )
 
 type databaseClient struct {

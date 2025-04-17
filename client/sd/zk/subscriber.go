@@ -2,10 +2,10 @@ package zk
 
 import (
 	"context"
-	"framework/client/sd"
-	"framework/errors"
 	"github.com/go-zookeeper/zk"
 	json "github.com/json-iterator/go"
+	"github.com/oylshe1314/framework/client/sd"
+	"github.com/oylshe1314/framework/errors"
 	"strings"
 	"time"
 )
