@@ -11,29 +11,33 @@ import (
 	"time"
 )
 
-type RegisterClient struct {
-	Client
+func NewRegisterClient(config *sd.Config) sd.RegisterClient {
+	return &registerClient{client: client{config: config}}
+}
+
+type registerClient struct {
+	client
 
 	version int32
 	svcPath string
 	svcNode *sd.ServiceNode
 }
 
-func (this *RegisterClient) SetServiceNode(node *sd.ServiceNode) {
+func (this *registerClient) SetServiceNode(node *sd.ServiceNode) {
 	this.svcNode = node
 }
 
-func (this *RegisterClient) Init() (err error) {
+func (this *registerClient) Init() (err error) {
 	if this.svcNode == nil {
 		return errors.Error("please set service node before init")
 	}
 
-	this.Client.connectHandler = this.register
-	this.Client.closeHandler = this.deregister
-	return this.Client.Init()
+	this.client.connectHandler = this.register
+	this.client.closeHandler = this.deregister
+	return this.client.Init()
 }
 
-func (this *RegisterClient) createParentNodes(conn *zk.Conn, path string) error {
+func (this *registerClient) createParentNodes(conn *zk.Conn, path string) error {
 	var strPath string
 	var nodeNames = strings.Split(path, "/")
 
@@ -54,7 +58,7 @@ func (this *RegisterClient) createParentNodes(conn *zk.Conn, path string) error 
 	return nil
 }
 
-func (this *RegisterClient) setServiceNode(conn *zk.Conn) (string, error) {
+func (this *registerClient) setServiceNode(conn *zk.Conn) (string, error) {
 	var node = this.svcNode
 
 	this.version = 0
@@ -131,7 +135,7 @@ func (this *RegisterClient) setServiceNode(conn *zk.Conn) (string, error) {
 	}
 }
 
-func (this *RegisterClient) register(conn *zk.Conn) {
+func (this *registerClient) register(conn *zk.Conn) {
 	for {
 		path, err := this.setServiceNode(conn)
 		if err == nil {
@@ -143,13 +147,13 @@ func (this *RegisterClient) register(conn *zk.Conn) {
 	}
 }
 
-func (this *RegisterClient) deleteServiceNode(conn *zk.Conn) {
+func (this *registerClient) deleteServiceNode(conn *zk.Conn) {
 	if len(this.svcPath) > 0 {
 		_ = conn.Delete(this.svcPath, this.version)
 	}
 }
 
-func (this *RegisterClient) deregister(conn *zk.Conn) {
+func (this *registerClient) deregister(conn *zk.Conn) {
 	if conn != nil && conn.State() >= zk.StateConnected {
 		this.deleteServiceNode(conn)
 	}

@@ -3,6 +3,7 @@ package zk
 import (
 	"context"
 	"github.com/go-zookeeper/zk"
+	"github.com/oylshe1314/framework/client/sd"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
 	"time"
@@ -16,60 +17,44 @@ const (
 	serviceNodesPath   = "/nodes"
 )
 
-type Client struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	servers  []string
-	timeout  time.Duration
-	rootPath string
+type client struct {
+	config *sd.Config
 
 	logger log.Logger
+
+	rootPath string
+
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	connectHandler func(conn *zk.Conn)
 	closeHandler   func(conn *zk.Conn)
 }
 
-func (this *Client) WithServers(servers []string) {
-	this.servers = servers
-}
-
-func (this *Client) WithTimeout(timeout time.Duration) {
-	this.timeout = time.Millisecond * timeout
-}
-
-func (this *Client) WithRootPath(rootPath string) {
-	this.rootPath = rootPath
-}
-
-func (this *Client) SetLogger(logger log.Logger) {
+func (this *client) SetLogger(logger log.Logger) {
 	this.logger = logger
 }
 
-func (this *Client) ConnectHandler(connectedHandler func(conn *zk.Conn)) {
+func (this *client) ConnectHandler(connectedHandler func(conn *zk.Conn)) {
 	this.connectHandler = connectedHandler
 }
 
-func (this *Client) CloseHandler(closeHandler func(conn *zk.Conn)) {
+func (this *client) CloseHandler(closeHandler func(conn *zk.Conn)) {
 	this.closeHandler = closeHandler
 }
 
-func (this *Client) Init() error {
+func (this *client) Init() error {
+	if this.config == nil {
+		return errors.Error("Service register-discovery client init config can not be nil")
+	}
+
 	if this.logger == nil {
 		this.logger = log.DefaultLogger
 	}
 
-	if len(this.servers) == 0 {
-		return errors.Error("empty zookeeper server list")
-	} else {
-		for _, server := range this.servers {
-			if len(server) == 0 {
-				return errors.Error("wrong address of zookeeper server")
-			}
-		}
-	}
-
-	if this.rootPath == "" {
+	var ok bool
+	this.rootPath, ok = this.config.Extra["rootPath"].(string)
+	if !ok || this.rootPath == "" {
 		this.rootPath = defaultRootPath
 	} else {
 		if this.rootPath[len(this.rootPath)-1] == '/' {
@@ -77,27 +62,27 @@ func (this *Client) Init() error {
 		}
 	}
 
-	if this.timeout == 0 {
-		this.timeout = DefaultTimeout
+	if this.config.Timeout == 0 {
+		this.config.Timeout = DefaultTimeout
 	}
 
 	this.ctx, this.cancel = context.WithCancel(context.Background())
 	return nil
 }
 
-func (this *Client) Close() error {
+func (this *client) Close() error {
 	if this.cancel != nil {
 		this.cancel()
 	}
 	return nil
 }
 
-func (this *Client) work() error {
+func (this *client) work() error {
 	var err error
 	var conn *zk.Conn
 	var eventChan <-chan zk.Event
 	for {
-		conn, eventChan, err = zk.Connect(this.servers, this.timeout, zk.WithLogger(this.logger))
+		conn, eventChan, err = zk.Connect(this.config.Servers, this.config.Timeout, zk.WithLogger(this.logger))
 		if err != nil {
 			this.logger.Error(err)
 			time.Sleep(time.Second * 3)
@@ -154,7 +139,7 @@ func (this *Client) work() error {
 	}
 }
 
-func (this *Client) Work() error {
+func (this *client) Work() error {
 	if this.connectHandler == nil && this.closeHandler == nil {
 		return errors.Error("at least one of 'connectedHandler' and 'closeHandler' is not nil")
 	}
