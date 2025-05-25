@@ -26,3 +26,19 @@ func NewReply(v interface{}) *Reply {
 		return newReply(0, "success", t)
 	}
 }
+
+func (this *Reply) Error() error {
+	if this.Status == errors.StatusSuccessful {
+		return nil
+	} else {
+		return errors.Error(this.Message)
+	}
+}
+
+func (this *Reply) Succeed() bool {
+	return this.Status == errors.StatusSuccessful
+}
+
+func (this *Reply) Failed() bool {
+	return !this.Succeed()
+}
