@@ -23,6 +23,7 @@ type client struct {
 	logger log.Logger
 
 	rootPath string
+	timeout  time.Duration
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -63,7 +64,9 @@ func (this *client) Init() error {
 	}
 
 	if this.config.Timeout == 0 {
-		this.config.Timeout = DefaultTimeout
+		this.timeout = DefaultTimeout
+	} else {
+		this.timeout = time.Millisecond * this.config.Timeout
 	}
 
 	this.ctx, this.cancel = context.WithCancel(context.Background())
@@ -82,7 +85,7 @@ func (this *client) work() error {
 	var conn *zk.Conn
 	var eventChan <-chan zk.Event
 	for {
-		conn, eventChan, err = zk.Connect(this.config.Servers, this.config.Timeout, zk.WithLogger(this.logger))
+		conn, eventChan, err = zk.Connect(this.config.Servers, this.timeout, zk.WithLogger(this.logger))
 		if err != nil {
 			this.logger.Error(err)
 			time.Sleep(time.Second * 3)
