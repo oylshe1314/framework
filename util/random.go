@@ -1,9 +1,10 @@
 package util
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"math/rand"
+	"strings"
 )
 
 func NewRandom() *rand.Rand {
@@ -70,17 +71,17 @@ const (
 	// CharsUpperLetter 大写字母
 	CharsUpperLetter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-	// CharsLowerletter 大写字母
-	CharsLowerletter = "abcdefghijklmnopqrstuvwxyz"
+	// CharsLowerLetter 大写字母
+	CharsLowerLetter = "abcdefghijklmnopqrstuvwxyz"
 
 	//CharsAllLetter 所有所有字母
-	CharsAllLetter = CharsUpperLetter + CharsLowerletter
+	CharsAllLetter = CharsUpperLetter + CharsLowerLetter
 
 	// CharsAllNumber 所有数字
 	CharsAllNumber = "0123456789"
 
 	// CharsNumbersAndLetter 数字加字母
-	CharsNumbersAndLetter = CharsAllNumber + CharsAllLetter
+	CharsNumbersAndLetter = CharsAllNumber + CharsLowerLetter
 )
 
 func RandomStrings(chars string, num int, repeated bool) string {
@@ -109,7 +110,7 @@ func RandomToken() string {
 	var src []byte
 	src = Uint64ToBytes(src, uint64(UnixMilli())<<48|(uint64(defaultRandom.Int63n(65536))&0xFFFF))
 	src = Uint64ToBytes(src, defaultRandom.Uint64())
-	var h = md5.New()
+	var h = sha256.New()
 	h.Write(src)
-	return hex.EncodeToString(h.Sum(nil))
+	return strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
 }

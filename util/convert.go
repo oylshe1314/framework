@@ -150,3 +150,16 @@ func NumbersConvert2[T1 Number, T2 Number](s1 []T1, _ T2) (s2 []T2) {
 	NumbersConvert1(s1, &s2)
 	return
 }
+
+func DecimalTo36(decimal int) string {
+	var ary [64]byte
+	var i = 0
+	for i = 63; i >= 0; i-- {
+		decimal /= 36
+		ary[i] = CharsNumbersAndLetter[decimal%36]
+		if decimal == 0 {
+			break
+		}
+	}
+	return string(ary[64-i:])
+}

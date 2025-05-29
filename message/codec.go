@@ -12,43 +12,37 @@ type codec interface {
 	decode(buf []byte, msg interface{}) error
 }
 
-type base[c codec] struct {
+type baseCodec[c codec] struct {
 	c c
 }
 
-func (this *base[c]) Encode(msg interface{}) ([]byte, error) {
+func (this *baseCodec[c]) Encode(msg interface{}) ([]byte, error) {
 	switch v := msg.(type) {
 	case nil:
 		return nil, nil
 	case []byte:
 		return v, nil
-	case string:
-		return []byte(v), nil
 	default:
 		return c.encode(this.c, msg)
 	}
 }
 
-func (this *base[c]) Decode(buf []byte, msg interface{}) error {
+func (this *baseCodec[c]) Decode(buf []byte, msg interface{}) error {
 	switch v := msg.(type) {
 	case nil:
 		return nil
 	case []byte:
 		copy(v, buf)
-		return nil
 	case *[]byte:
 		*v = buf
-		return nil
-	case *string:
-		*v = string(buf)
-		return nil
 	default:
 		return c.decode(this.c, buf, msg)
 	}
+	return nil
 }
 
 type stringCodec struct {
-	base[*stringCodec]
+	baseCodec[*stringCodec]
 }
 
 func (*stringCodec) encode(msg interface{}) ([]byte, error) {

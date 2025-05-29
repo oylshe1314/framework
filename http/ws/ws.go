@@ -19,12 +19,10 @@ type Message struct {
 	Body   []byte
 
 	Conn *Conn
-
-	codec message.Codec
 }
 
-func newMessage(modId, msgId uint16, length uint32, body []byte, conn *Conn, codec message.Codec) *Message {
-	return &Message{ModId: modId, MsgId: msgId, Length: length, Body: body, Conn: conn, codec: codec}
+func newMessage(modId, msgId uint16, length uint32, body []byte, conn *Conn) *Message {
+	return &Message{ModId: modId, MsgId: msgId, Length: length, Body: body, Conn: conn}
 }
 
 func (this *Message) Read(v interface{}) error {
@@ -35,7 +33,7 @@ func (this *Message) Read(v interface{}) error {
 		return nil
 	}
 
-	var err = this.codec.Decode(this.Body, v)
+	var err = this.Conn.handler.messageCodec().Decode(this.Body, v)
 	if err != nil {
 		return err
 	}
@@ -82,7 +80,7 @@ func (this *Conn) Read() (*Message, error) {
 		return nil, err
 	}
 
-	return newMessage(util.BytesToUint16(msg[0:2]), util.BytesToUint16(msg[2:4]), util.BytesToUint32(msg[4:8]), msg[8:], this, this.handler.messageCodec()), nil
+	return newMessage(util.BytesToUint16(msg[0:2]), util.BytesToUint16(msg[2:4]), util.BytesToUint32(msg[4:8]), msg[8:], this), nil
 }
 
 func (this *Conn) RemoteAddr() string {
@@ -139,12 +137,12 @@ func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 
 func (this *Conn) Serve() error {
 	defer func() {
+		this.handler.handleWsDisconnect(this)
+
 		if this.closed {
 			return
 		}
-
-		this.handler.handleWsDisconnect(this)
-		_ = this.conn.Close()
+		_ = this.Close()
 
 		var err = recover()
 		if err != nil {

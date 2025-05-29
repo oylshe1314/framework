@@ -8,6 +8,7 @@ import (
 	"net"
 	"runtime/debug"
 	"sync"
+	"time"
 )
 
 const HeaderLength uint32 = 8
@@ -19,29 +20,31 @@ type Message struct {
 	Body   []byte
 
 	Conn *Conn
-
-	codec message.Codec
 }
 
-func newMessage(modId, msgId uint16, length uint32, body []byte, conn *Conn, codec message.Codec) *Message {
-	return &Message{ModId: modId, MsgId: msgId, Length: length, Body: body, Conn: conn, codec: codec}
+func newMessage(modId, msgId uint16, length uint32, body []byte, conn *Conn) *Message {
+	return &Message{ModId: modId, MsgId: msgId, Length: length, Body: body, Conn: conn}
 }
 
 func (this *Message) Read(v interface{}) error {
 	if v == nil || len(this.Body) == 0 {
 		if this.Conn.logger.IsDebugEnabled() {
-			this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(nil))
+			if this.Conn.isHeartbeat(this.ModId, this.MsgId) {
+				this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(nil))
+			}
 		}
 		return nil
 	}
 
-	var err = this.codec.Decode(this.Body, v)
+	var err = this.Conn.handler.messageCodec().Decode(this.Body, v)
 	if err != nil {
 		return err
 	}
 
 	if this.Conn.logger.IsDebugEnabled() {
-		this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(v))
+		if this.Conn.isHeartbeat(this.ModId, this.MsgId) {
+			this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(v))
+		}
 	}
 	return nil
 }
@@ -53,9 +56,9 @@ func (this *Message) Reply(v interface{}) error {
 type MessageHandler func(*Message)
 
 type Handler interface {
-	handleMessage(*Message)
 	handleConnect(*Conn)
 	handleDisconnect(*Conn)
+	handleMessage(*Message)
 	messageCodec() message.Codec
 }
 
@@ -70,6 +73,11 @@ type Conn struct {
 	handler Handler
 
 	object interface{}
+
+	beatTime   int64
+	beatPeriod int64
+	beatModId  uint16
+	beatMsgId  uint16
 }
 
 func NewConn(conn net.Conn, logger log.Logger, handler Handler) *Conn {
@@ -104,6 +112,14 @@ func (this *Conn) ObjectUid() (uid uint64) {
 	return
 }
 
+func (this *Conn) isHeartbeat(modId, msgId uint16) bool {
+	return this.beatModId == 0 || this.beatMsgId == 0 || modId != this.beatModId || msgId != this.beatMsgId
+}
+
+func (this *Conn) Beat(now int64) {
+	this.beatTime = now
+}
+
 func (this *Conn) Read() (msg *Message, err error) {
 	var head = make([]byte, HeaderLength)
 	_, err = io.ReadFull(this.conn, head)
@@ -124,7 +140,7 @@ func (this *Conn) Read() (msg *Message, err error) {
 		}
 	}
 
-	msg = newMessage(modId, msgId, length, body, this, this.handler.messageCodec())
+	msg = newMessage(modId, msgId, length, body, this)
 	return
 }
 
@@ -153,11 +169,13 @@ func (this *Conn) send(modId, msgId uint16, body []byte) (err error) {
 
 func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 	if this.logger.IsDebugEnabled() {
-		this.logger.Debugf("[%s:%d] -> ModId: %d, MsgId: %d, Msg: %s", this.RemoteAddr(), this.ObjectUid(), modId, msgId, util.ToJsonString(v))
+		if this.isHeartbeat(modId, msgId) {
+			this.logger.Debugf("[%s:%d] -> ModId: %d, MsgId: %d, Msg: %s", this.RemoteAddr(), this.ObjectUid(), modId, msgId, util.ToJsonString(v))
+		}
 	}
-
 	body, err := this.handler.messageCodec().Encode(v)
 	if err != nil {
+		this.logger.Error(err)
 		return err
 	}
 	return this.send(modId, msgId, body)
@@ -165,12 +183,12 @@ func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 
 func (this *Conn) Serve() error {
 	defer func() {
+		this.handler.handleDisconnect(this)
+
 		if this.closed {
 			return
 		}
-
-		this.handler.handleDisconnect(this)
-		_ = this.conn.Close()
+		_ = this.Close()
 
 		var err = recover()
 		if err != nil {
@@ -197,6 +215,33 @@ func (this *Conn) Serve() error {
 
 		this.handler.handleMessage(msg)
 	}
+}
+
+func (this *Conn) Beating(modId, msgId uint16, period int64) {
+	this.beatPeriod = period
+	this.beatModId = modId
+	this.beatMsgId = msgId
+	this.beatTime = util.Unix()
+	go func() {
+		defer func() {
+			var err = recover()
+			if err != nil {
+				this.logger.Error(err)
+				this.logger.Error(string(debug.Stack()))
+			}
+		}()
+		this.logger.Infof("[%s] 心跳协程启动, time: %d", this.RemoteAddr(), this.beatTime)
+		for !this.closed {
+			time.Sleep(time.Second)
+			var now = util.Unix()
+			if now-this.beatTime > period {
+				this.logger.Warnf("[%s] 连接心跳超时, time: %d", this.RemoteAddr(), this.beatTime)
+				this.Close()
+				break
+			}
+		}
+		this.logger.Infof("[%s] 心跳协程退出, time: %d", this.RemoteAddr(), this.beatTime)
+	}()
 }
 
 func (this *Conn) Close() (err error) {

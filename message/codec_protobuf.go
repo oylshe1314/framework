@@ -6,7 +6,7 @@ import (
 )
 
 type protobufCodec struct {
-	base[*protobufCodec]
+	baseCodec[*protobufCodec]
 }
 
 func NewProtobufCodec() Codec {

@@ -41,7 +41,6 @@ func (this *NetServer) serve() error {
 		go func() {
 			defer func() {
 				delete(this.connMap, conn)
-				_ = conn.Close()
 			}()
 			_ = conn.Serve()
 		}()

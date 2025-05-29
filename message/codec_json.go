@@ -5,7 +5,7 @@ import (
 )
 
 type jsonCodec struct {
-	base[*jsonCodec]
+	baseCodec[*jsonCodec]
 }
 
 func NewJsonCodec() Codec {
