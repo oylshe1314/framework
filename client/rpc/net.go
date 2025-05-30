@@ -8,7 +8,6 @@ import (
 	"github.com/oylshe1314/framework/message"
 	"github.com/oylshe1314/framework/net"
 	"github.com/oylshe1314/framework/util"
-	"math/rand"
 	"sync"
 )
 
@@ -20,7 +19,6 @@ type NetRpcNode struct {
 type NetRpcClient struct {
 	closed bool
 
-	rand   *rand.Rand
 	logger log.Logger
 	codec  message.Codec
 	locker sync.RWMutex
@@ -46,8 +44,6 @@ func (this *NetRpcClient) Init() error {
 	if this.logger == nil {
 		this.logger = log.DefaultLogger
 	}
-
-	this.rand = rand.New(rand.NewSource(util.UnixMilli()))
 
 	this.nodes = map[string]map[uint32]*NetRpcNode{}
 
@@ -255,7 +251,7 @@ func (this *NetRpcClient) RandNode(service string) *NetRpcNode {
 		return nil
 	}
 
-	return nodes[this.rand.Intn(len(nodes))]
+	return nodes[util.NewRand().IntN(len(nodes))]
 }
 
 func (this *NetRpcClient) nodesSend(nodes map[uint32]*NetRpcNode, modId, msgId uint16, v interface{}) (MultiResults[any], error) {

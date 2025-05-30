@@ -107,14 +107,23 @@ func FloatsToStrings[T Float](ts []T, prec int) []string {
 }
 
 func SplitToIntegers1[T Integer](str, sep string) ([]T, error) {
+	if len(str) == 0 {
+		return nil, nil
+	}
 	return StringsToIntegers1[T](strings.Split(str, sep))
 }
 
 func SplitToIntegers2[T Integer](str, sep string, ts *[]T) error {
+	if len(str) == 0 {
+		return nil
+	}
 	return StringsToIntegers2(strings.Split(str, sep), ts)
 }
 
 func SplitToFloats1[T Float](str, sep string) ([]T, error) {
+	if len(str) == 0 {
+		return nil, nil
+	}
 	if sep == "." {
 		return nil, errors.Error("can not use '.' to split the floats in the string")
 	}
@@ -122,6 +131,9 @@ func SplitToFloats1[T Float](str, sep string) ([]T, error) {
 }
 
 func SplitToFloats2[T Float](str, sep string, ts *[]T) error {
+	if len(str) == 0 {
+		return nil
+	}
 	if sep == "." {
 		return errors.Error("can not use '.' to split the floats in the string")
 	}
@@ -132,11 +144,13 @@ func IntegersJoinToString[T Integer](ts []T, sep string) string {
 	if len(ts) == 0 {
 		return ""
 	}
-	var ss = make([]string, len(ts))
-	for i, t := range ts {
-		ss[i] = IntegerToString(t)
+	var sb strings.Builder
+	sb.WriteString(IntegerToString(ts[0]))
+	for _, t := range ts[1:] {
+		sb.WriteString(sep)
+		sb.WriteString(IntegerToString(t))
 	}
-	return strings.Join(ss, sep)
+	return sb.String()
 }
 
 func NumbersConvert1[T1 Number, T2 Number](s1 []T1, s2 *[]T2) {
@@ -155,8 +169,8 @@ func DecimalTo36(decimal int) string {
 	var ary [64]byte
 	var i = 0
 	for i = 63; i >= 0; i-- {
-		decimal /= 36
 		ary[i] = CharsNumbersAndLetter[decimal%36]
+		decimal /= 36
 		if decimal == 0 {
 			break
 		}

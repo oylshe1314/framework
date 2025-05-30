@@ -7,7 +7,6 @@ import (
 	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/message"
 	"github.com/oylshe1314/framework/util"
-	"math/rand"
 	"net/url"
 	"sync"
 )
@@ -18,7 +17,6 @@ type HttpRpcNode struct {
 }
 
 type HttpRpcClient struct {
-	rand   *rand.Rand
 	logger log.Logger
 	locker sync.RWMutex
 	nodes  map[string]map[uint32]*HttpRpcNode
@@ -33,7 +31,6 @@ func (this *HttpRpcClient) Init() error {
 		this.logger = log.DefaultLogger
 	}
 
-	this.rand = rand.New(rand.NewSource(util.UnixMilli()))
 	this.nodes = make(map[string]map[uint32]*HttpRpcNode)
 	return nil
 }
@@ -134,7 +131,7 @@ func (this *HttpRpcClient) RandNode(service string) *HttpRpcNode {
 		return nil
 	}
 
-	return nodes[this.rand.Intn(len(nodes))]
+	return nodes[util.NewRand().IntN(len(nodes))]
 }
 
 func (this *HttpRpcClient) nodesGet(nodes map[uint32]*HttpRpcNode, path string, query url.Values, res interface{}, headers ...client.HttpHeader) MultiResults[*message.Reply] {
