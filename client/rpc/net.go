@@ -12,7 +12,7 @@ import (
 )
 
 type NetRpcNode struct {
-	*sd.ServiceNode
+	*sd.ServerNode
 	*client.NetClient
 }
 
@@ -26,10 +26,10 @@ type NetRpcClient struct {
 
 	workChan chan *NetRpcNode
 
-	connectHandlers    map[string]func(node *sd.ServiceNode, conn *net.Conn)
-	disconnectHandlers map[string]func(node *sd.ServiceNode, conn *net.Conn)
-	messageHandlers    map[string]map[uint32]func(node *sd.ServiceNode, msg *net.Message)
-	defaultHandlers    map[string]func(node *sd.ServiceNode, msg *net.Message)
+	connectHandlers    map[string]func(node *sd.ServerNode, conn *net.Conn)
+	disconnectHandlers map[string]func(node *sd.ServerNode, conn *net.Conn)
+	messageHandlers    map[string]map[uint32]func(node *sd.ServerNode, msg *net.Message)
+	defaultHandlers    map[string]func(node *sd.ServerNode, msg *net.Message)
 }
 
 func (this *NetRpcClient) SetLogger(logger log.Logger) {
@@ -47,10 +47,10 @@ func (this *NetRpcClient) Init() error {
 
 	this.nodes = map[string]map[uint32]*NetRpcNode{}
 
-	this.connectHandlers = map[string]func(node *sd.ServiceNode, conn *net.Conn){}
-	this.disconnectHandlers = map[string]func(node *sd.ServiceNode, conn *net.Conn){}
-	this.messageHandlers = map[string]map[uint32]func(node *sd.ServiceNode, msg *net.Message){}
-	this.defaultHandlers = map[string]func(node *sd.ServiceNode, msg *net.Message){}
+	this.connectHandlers = map[string]func(node *sd.ServerNode, conn *net.Conn){}
+	this.disconnectHandlers = map[string]func(node *sd.ServerNode, conn *net.Conn){}
+	this.messageHandlers = map[string]map[uint32]func(node *sd.ServerNode, msg *net.Message){}
+	this.defaultHandlers = map[string]func(node *sd.ServerNode, msg *net.Message){}
 
 	return nil
 }
@@ -88,7 +88,7 @@ func (this *NetRpcClient) Work() error {
 		if connectHandler != nil {
 			gotoWork = true
 			node.ConnectHandler(func(conn *net.Conn) {
-				connectHandler(node.ServiceNode, conn)
+				connectHandler(node.ServerNode, conn)
 			})
 		}
 
@@ -96,7 +96,7 @@ func (this *NetRpcClient) Work() error {
 		if disconnectHandler != nil {
 			gotoWork = true
 			node.DisconnectHandler(func(conn *net.Conn) {
-				disconnectHandler(node.ServiceNode, conn)
+				disconnectHandler(node.ServerNode, conn)
 			})
 		}
 
@@ -106,7 +106,7 @@ func (this *NetRpcClient) Work() error {
 			for id, handler := range messageHandlers {
 				modId, msgId := util.Split2uint16(id)
 				node.MessageHandler(modId, msgId, func(msg *net.Message) {
-					handler(node.ServiceNode, msg)
+					handler(node.ServerNode, msg)
 				})
 			}
 		}
@@ -115,7 +115,7 @@ func (this *NetRpcClient) Work() error {
 		if defaultHandler != nil {
 			gotoWork = true
 			node.DefaultHandler(func(msg *net.Message) {
-				defaultHandler(node.ServiceNode, msg)
+				defaultHandler(node.ServerNode, msg)
 			})
 		}
 
@@ -130,28 +130,28 @@ func (this *NetRpcClient) Work() error {
 	}
 }
 
-func (this *NetRpcClient) ConnectHandler(service string, handler func(node *sd.ServiceNode, conn *net.Conn)) {
+func (this *NetRpcClient) ConnectHandler(service string, handler func(node *sd.ServerNode, conn *net.Conn)) {
 	this.connectHandlers[service] = handler
 }
 
-func (this *NetRpcClient) DisconnectHandler(service string, handler func(node *sd.ServiceNode, conn *net.Conn)) {
+func (this *NetRpcClient) DisconnectHandler(service string, handler func(node *sd.ServerNode, conn *net.Conn)) {
 	this.disconnectHandlers[service] = handler
 }
 
-func (this *NetRpcClient) MessageHandler(service string, modId, msgId uint16, handler func(node *sd.ServiceNode, msg *net.Message)) {
+func (this *NetRpcClient) MessageHandler(service string, modId, msgId uint16, handler func(node *sd.ServerNode, msg *net.Message)) {
 	var messageHandlers = this.messageHandlers[service]
 	if messageHandlers == nil {
-		messageHandlers = map[uint32]func(node *sd.ServiceNode, msg *net.Message){}
+		messageHandlers = map[uint32]func(node *sd.ServerNode, msg *net.Message){}
 		this.messageHandlers[service] = messageHandlers
 	}
 	messageHandlers[util.Compose2uint16(modId, msgId)] = handler
 }
 
-func (this *NetRpcClient) DefaultHandler(service string, handler func(node *sd.ServiceNode, msg *net.Message)) {
+func (this *NetRpcClient) DefaultHandler(service string, handler func(node *sd.ServerNode, msg *net.Message)) {
 	this.defaultHandlers[service] = handler
 }
 
-func (this *NetRpcClient) SubscribeCallback(service string, nodes []*sd.ServiceNode) {
+func (this *NetRpcClient) SubscribeCallback(service string, nodes []*sd.ServerNode) {
 	if len(nodes) == 0 {
 		this.locker.Lock()
 		delete(this.nodes, service)
@@ -173,7 +173,7 @@ func (this *NetRpcClient) SubscribeCallback(service string, nodes []*sd.ServiceN
 			if oldNodes != nil {
 				oldNode := oldNodes[node.AppId]
 				if oldNode != nil && oldNode.Inner.Network == node.Inner.Network && oldNode.Inner.Address == node.Inner.Address {
-					clients[node.AppId] = &NetRpcNode{ServiceNode: node, NetClient: oldNode.NetClient}
+					clients[node.AppId] = &NetRpcNode{ServerNode: node, NetClient: oldNode.NetClient}
 					continue
 				}
 			}
@@ -198,7 +198,7 @@ func (this *NetRpcClient) SubscribeCallback(service string, nodes []*sd.ServiceN
 
 			this.logger.Infof("Init the service node succeed, service: %s, appId: %d, address: %s", service, node.AppId, node.Inner.Address)
 
-			var rpcNode = &NetRpcNode{ServiceNode: node, NetClient: netClient}
+			var rpcNode = &NetRpcNode{ServerNode: node, NetClient: netClient}
 
 			clients[node.AppId] = rpcNode
 

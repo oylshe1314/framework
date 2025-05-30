@@ -6,7 +6,7 @@ import (
 )
 
 type WebSocketRpcNode struct {
-	*sd.ServiceNode
+	*sd.ServerNode
 	*client.WebSocketClient
 }
 

@@ -16,9 +16,9 @@ type OptionalServer interface {
 	Init() error
 }
 
-func InitServers(svrs ...OptionalServer) (err error) {
-	for _, svr := range svrs {
-		err = svr.Init()
+func InitServers(ss ...OptionalServer) (err error) {
+	for _, s := range ss {
+		err = s.Init()
 		if err != nil {
 			return err
 		}

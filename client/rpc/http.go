@@ -12,7 +12,7 @@ import (
 )
 
 type HttpRpcNode struct {
-	*sd.ServiceNode
+	*sd.ServerNode
 	*client.HttpClient
 }
 
@@ -44,7 +44,7 @@ func (this *HttpRpcClient) Close() error {
 	return nil
 }
 
-func (this *HttpRpcClient) SubscribeCallback(service string, nodes []*sd.ServiceNode) {
+func (this *HttpRpcClient) SubscribeCallback(service string, nodes []*sd.ServerNode) {
 	if len(nodes) == 0 {
 		this.locker.Lock()
 		delete(this.nodes, service)
@@ -66,7 +66,7 @@ func (this *HttpRpcClient) SubscribeCallback(service string, nodes []*sd.Service
 			if oldNodes != nil {
 				oldNode := oldNodes[node.AppId]
 				if oldNode != nil && oldNode.Inner.Network == node.Inner.Network && oldNode.Inner.Address == node.Inner.Address {
-					clients[node.AppId] = &HttpRpcNode{ServiceNode: node, HttpClient: oldNode.HttpClient}
+					clients[node.AppId] = &HttpRpcNode{ServerNode: node, HttpClient: oldNode.HttpClient}
 					continue
 				}
 			}
@@ -84,7 +84,7 @@ func (this *HttpRpcClient) SubscribeCallback(service string, nodes []*sd.Service
 
 			this.logger.Infof("Init the service node succeed, service: %s, appId: %d, address: %s", service, node.AppId, node.Inner.Address)
 
-			clients[node.AppId] = &HttpRpcNode{ServiceNode: node, HttpClient: httpClient}
+			clients[node.AppId] = &HttpRpcNode{ServerNode: node, HttpClient: httpClient}
 		}
 
 		this.locker.Lock()

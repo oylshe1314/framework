@@ -5,7 +5,7 @@ import (
 	"github.com/go-zookeeper/zk"
 	"github.com/oylshe1314/framework/client/sd"
 	"github.com/oylshe1314/framework/errors"
-	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/server"
 	"time"
 )
 
@@ -20,7 +20,7 @@ const (
 type client struct {
 	config *sd.Config
 
-	logger log.Logger
+	server server.Server
 
 	rootPath string
 	timeout  time.Duration
@@ -32,8 +32,8 @@ type client struct {
 	closeHandler   func(conn *zk.Conn)
 }
 
-func (this *client) SetLogger(logger log.Logger) {
-	this.logger = logger
+func (this *client) SetServer(svr server.Server) {
+	this.server = svr
 }
 
 func (this *client) ConnectHandler(connectedHandler func(conn *zk.Conn)) {
@@ -46,11 +46,11 @@ func (this *client) CloseHandler(closeHandler func(conn *zk.Conn)) {
 
 func (this *client) Init() error {
 	if this.config == nil {
-		return errors.Error("Service register-discovery client init config can not be nil")
+		return errors.Error("Service register-discovery client init 'config' can not be nil")
 	}
 
-	if this.logger == nil {
-		this.logger = log.DefaultLogger
+	if this.server == nil {
+		return errors.Error("Service register-discovery client init 'server' can not be nil")
 	}
 
 	var ok bool
@@ -85,9 +85,9 @@ func (this *client) work() error {
 	var conn *zk.Conn
 	var eventChan <-chan zk.Event
 	for {
-		conn, eventChan, err = zk.Connect(this.config.Servers, this.timeout, zk.WithLogger(this.logger))
+		conn, eventChan, err = zk.Connect(this.config.Servers, this.timeout, zk.WithLogger(this.server.Logger()))
 		if err != nil {
-			this.logger.Error(err)
+			this.server.Logger().Error(err)
 			time.Sleep(time.Second * 3)
 			continue
 		}
@@ -100,7 +100,7 @@ func (this *client) work() error {
 					break eventLoop
 				}
 				if event.Err != nil {
-					this.logger.Error(err)
+					this.server.Logger().Error(err)
 				}
 				if event.Type != zk.EventSession {
 					continue
@@ -108,7 +108,7 @@ func (this *client) work() error {
 
 				switch event.State {
 				case zk.StateDisconnected:
-					this.logger.Warn("Zookeeper server disconnected, will reconnect after")
+					this.server.Logger().Warn("Zookeeper server disconnected, will reconnect after")
 					if conn != nil {
 						conn.Close()
 						conn = nil

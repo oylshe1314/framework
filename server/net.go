@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/errors"
 	. "github.com/oylshe1314/framework/net"
 	"runtime/debug"
 )
@@ -12,21 +12,21 @@ type NetServer struct {
 	ConnMux
 
 	running bool
-	logger  log.Logger
+	server  Server
 
 	connMap map[*Conn]struct{}
 }
 
-func (this *NetServer) SetLogger(logger log.Logger) {
-	this.logger = logger
+func (this *NetServer) SetServer(svr Server) {
+	this.server = svr
 }
 
 func (this *NetServer) serve() error {
 	defer func() {
 		var err = recover()
 		if err != nil {
-			this.logger.Error(err)
-			this.logger.Error(string(debug.Stack()))
+			this.server.Logger().Error(err)
+			this.server.Logger().Error(string(debug.Stack()))
 		}
 	}()
 
@@ -36,7 +36,7 @@ func (this *NetServer) serve() error {
 			return err
 		}
 
-		conn := NewConn(cc, this.logger, &this.ConnMux)
+		conn := NewConn(cc, this.server.Logger(), &this.ConnMux)
 		this.connMap[conn] = struct{}{}
 		go func() {
 			defer func() {
@@ -48,8 +48,8 @@ func (this *NetServer) serve() error {
 }
 
 func (this *NetServer) Init() (err error) {
-	if this.logger == nil {
-		this.logger = log.DefaultLogger
+	if this.server == nil {
+		return errors.Error("net server init 'server' can not be nil")
 	}
 
 	this.connMap = make(map[*Conn]struct{})
@@ -63,7 +63,7 @@ func (this *NetServer) Serve() (err error) {
 		return err
 	}
 
-	this.logger.Info("NetServer is listening on ", this.Bind())
+	this.server.Logger().Info("NetServer is listening on ", this.Bind())
 
 	this.running = true
 	err = this.serve()

@@ -16,13 +16,13 @@ type WebSocketServer struct {
 func (this *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wc, err := this.wsu.Upgrade(w, r, nil)
 	if err != nil {
-		this.logger.Error("http request upgrade error, ", err)
+		this.server.Logger().Error("http request upgrade error, ", err)
 		return
 	}
 
-	this.logger.Debug("receive a websocket upgrade request, address: ", r.RemoteAddr)
+	this.server.Logger().Debug("receive a websocket upgrade request, address: ", r.RemoteAddr)
 
-	conn := NewConn(wc, this.logger, &this.ConnMux)
+	conn := NewConn(wc, this.server.Logger(), &this.ConnMux)
 	go func() {
 		_ = conn.Serve()
 	}()

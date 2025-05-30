@@ -45,7 +45,7 @@ type HttpServer struct {
 	sm http.ServeMux
 
 	running bool
-	logger  log.Logger
+	server  Server
 }
 
 func (this *HttpServer) WithDetectable(detectable bool) {
@@ -60,8 +60,8 @@ func (this *HttpServer) WithCorsConfig(corsConfig *CorsConfig) {
 	this.cors = corsConfig
 }
 
-func (this *HttpServer) SetLogger(logger log.Logger) {
-	this.logger = logger
+func (this *HttpServer) SetServer(svr Server) {
+	this.server = svr
 }
 
 func (this *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -125,8 +125,8 @@ func (this *HttpServer) FileHandler(pattern string) {
 }
 
 func (this *HttpServer) Init() (err error) {
-	if this.logger == nil {
-		this.logger = log.DefaultLogger
+	if this.server == nil {
+		return errors.Error("net server init 'server' can not be nil")
 	}
 
 	if this.ssl != nil {
@@ -140,7 +140,7 @@ func (this *HttpServer) Init() (err error) {
 		return err
 	}
 
-	this.hs = &http.Server{Handler: this, ErrorLog: log.NewNativeLogger(this.logger, log.LevelError)}
+	this.hs = &http.Server{Handler: this, ErrorLog: log.NewNativeLogger(this.server.Logger(), log.LevelError)}
 
 	if this.detectable {
 		this.GetHandler("/server/detect", this.detect)
@@ -194,7 +194,7 @@ func (this *HttpServer) Serve() (err error) {
 		return err
 	}
 
-	this.logger.Info("HttpServer is listening on ", this.Bind())
+	this.server.Logger().Info("HttpServer is listening on ", this.Bind())
 
 	this.running = true
 	if this.ssl != nil {

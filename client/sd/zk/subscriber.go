@@ -14,7 +14,7 @@ type subItem struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	svcName  string
+	svrName  string
 	callback sd.SubscribeCallback
 }
 
@@ -32,7 +32,7 @@ func (this *subscribeClient) AddSubscribe(name string, callback sd.SubscribeCall
 	if this.subItems == nil {
 		this.subItems = make(map[string]*subItem)
 	}
-	this.subItems[name] = &subItem{svcName: name, callback: callback}
+	this.subItems[name] = &subItem{svrName: name, callback: callback}
 }
 
 func (this *subscribeClient) Init() error {
@@ -44,8 +44,8 @@ func (this *subscribeClient) Init() error {
 	return this.client.Init()
 }
 
-func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zkNodes []string) ([]*sd.ServiceNode, error) {
-	var svcNodes []*sd.ServiceNode
+func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zkNodes []string) ([]*sd.ServerNode, error) {
+	var svrNodes []*sd.ServerNode
 	for _, zkNode := range zkNodes {
 		if !strings.HasPrefix(zkNode, "_c_") {
 			continue
@@ -53,7 +53,7 @@ func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zk
 
 		data, _, err := conn.Get(nodesPath + "/" + zkNode)
 		if err != nil {
-			this.logger.Errorf("Get service node data failed, %v, node: %s", err, zkNode)
+			this.server.Logger().Errorf("Get service node data failed, %v, node: %s", err, zkNode)
 			continue
 		}
 
@@ -61,39 +61,43 @@ func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zk
 			continue
 		}
 
-		var svcNode = new(sd.ServiceNode)
-		err = json.Unmarshal(data, svcNode)
+		var svrNode = new(sd.ServerNode)
+		err = json.Unmarshal(data, svrNode)
 		if err != nil {
-			this.logger.Errorf("Unmarshal service node data failed, %v, node: %s, data: %s", err, zkNode, data)
+			this.server.Logger().Errorf("Unmarshal service node data failed, %v, node: %s, data: %s", err, zkNode, data)
 			continue
 		}
 
-		svcNodes = append(svcNodes, svcNode)
+		if svrNode.Name == this.server.Name() && svrNode.AppId == this.server.AppId() {
+			continue
+		}
+
+		svrNodes = append(svrNodes, svrNode)
 	}
-	return svcNodes, nil
+	return svrNodes, nil
 }
 
 func (this *subscribeClient) itemLoop(conn *zk.Conn, item *subItem) {
-	var nodesPath = this.rootPath + "/" + item.svcName + serviceNodesPath
+	var nodesPath = this.rootPath + "/" + item.svrName + serviceNodesPath
 	for {
 		zkNodes, _, eventChan, err := conn.ChildrenW(nodesPath)
 		if err != nil {
 			if errors.Is(err, zk.ErrNoNode) {
-				this.logger.Warnf("Subscribe service '%s' node was not exists, path: %s", item.svcName, nodesPath)
+				this.server.Logger().Warnf("Subscribe service '%s' node was not exists, path: %s", item.svrName, nodesPath)
 				time.Sleep(time.Second * 10)
 				continue
 			}
-			this.logger.Error(err, ", path: ", nodesPath)
+			this.server.Logger().Error(err, ", path: ", nodesPath)
 			return
 		}
 
 		ss, err := this.readServiceData(conn, nodesPath, zkNodes)
 		if err != nil {
-			this.logger.Error(err, ", path: ", nodesPath)
+			this.server.Logger().Error(err, ", path: ", nodesPath)
 			return
 		}
 
-		item.callback(item.svcName, ss)
+		item.callback(item.svrName, ss)
 
 		select {
 		case event, ok := <-eventChan:
@@ -101,7 +105,7 @@ func (this *subscribeClient) itemLoop(conn *zk.Conn, item *subItem) {
 				return
 			}
 			if event.Err != nil {
-				this.logger.Error(event.Err)
+				this.server.Logger().Error(event.Err)
 				return
 			}
 		case <-this.ctx.Done():

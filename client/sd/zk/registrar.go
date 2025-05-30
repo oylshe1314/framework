@@ -5,6 +5,7 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/oylshe1314/framework/client/sd"
 	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/server"
 	"github.com/oylshe1314/framework/util"
 	"strconv"
 	"strings"
@@ -19,16 +20,19 @@ type registerClient struct {
 	client
 
 	version int32
-	svcPath string
-	svcNode *sd.ServiceNode
+	svrPath string
+	svrNode *sd.ServerNode
 }
 
-func (this *registerClient) SetServiceNode(node *sd.ServiceNode) {
-	this.svcNode = node
+func (this *registerClient) SetListener(inner, exter *server.Listener) {
+	if inner == nil && exter == nil {
+		return
+	}
+	this.svrNode = sd.NewServiceNode(this.server.Name(), this.server.AppId(), inner, exter)
 }
 
 func (this *registerClient) Init() (err error) {
-	if this.svcNode == nil {
+	if this.svrNode == nil {
 		return errors.Error("please set service node before init")
 	}
 
@@ -59,10 +63,10 @@ func (this *registerClient) createParentNodes(conn *zk.Conn, path string) error 
 }
 
 func (this *registerClient) setServiceNode(conn *zk.Conn) (string, error) {
-	var node = this.svcNode
+	var node = this.svrNode
 
 	this.version = 0
-	this.svcPath = ""
+	this.svrPath = ""
 
 	if len(node.Guid) == 0 {
 		node.Guid = util.UUID()
@@ -107,9 +111,9 @@ func (this *registerClient) setServiceNode(conn *zk.Conn) (string, error) {
 			return "", err
 		}
 
-		this.svcPath = appIdPath
+		this.svrPath = appIdPath
 		this.version = stat.Version
-		return this.svcPath, nil
+		return this.svrPath, nil
 	} else {
 		err = this.createParentNodes(conn, nodesPath)
 		if err != nil {
@@ -130,8 +134,8 @@ func (this *registerClient) setServiceNode(conn *zk.Conn) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		this.svcPath = newPath
-		return this.svcPath, nil
+		this.svrPath = newPath
+		return this.svrPath, nil
 	}
 }
 
@@ -139,17 +143,17 @@ func (this *registerClient) register(conn *zk.Conn) {
 	for {
 		path, err := this.setServiceNode(conn)
 		if err == nil {
-			this.logger.Infof("Service register success, node: %s", path)
+			this.server.Logger().Infof("Service register success, node: %s", path)
 			break
 		}
-		this.logger.Error(err)
+		this.server.Logger().Error(err)
 		time.Sleep(time.Second * 3)
 	}
 }
 
 func (this *registerClient) deleteServiceNode(conn *zk.Conn) {
-	if len(this.svcPath) > 0 {
-		_ = conn.Delete(this.svcPath, this.version)
+	if len(this.svrPath) > 0 {
+		_ = conn.Delete(this.svrPath, this.version)
 	}
 }
 
