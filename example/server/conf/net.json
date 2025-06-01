@@ -1,0 +1,22 @@
+{
+    "name": "test",
+    "appId": 1,
+    "logDir": "./logs",
+    "logLevel": "DEBUG",
+    "logConsole": true,
+    "netServer": {
+        "network": "tcp",
+        "bind": ":8101",
+        "address": "http://127.0.0.1:8101",
+        "detectable": true
+    },
+    "sdConfig": {
+        "servers": [
+            "127.0.0.1:2181"
+        ],
+        "timeout": 15000,
+        "extra": {
+            "rootPath": "/sk.org/server/test"
+        }
+    }
+}

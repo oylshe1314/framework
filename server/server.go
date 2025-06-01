@@ -3,12 +3,13 @@ package server
 import (
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/options"
 	"github.com/oylshe1314/framework/util"
 	"time"
 )
 
 type Server interface {
-	OptionalServer
+	options.Optional
 
 	Name() string
 	AppId() uint32

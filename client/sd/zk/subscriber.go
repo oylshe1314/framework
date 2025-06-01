@@ -53,7 +53,7 @@ func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zk
 
 		data, _, err := conn.Get(nodesPath + "/" + zkNode)
 		if err != nil {
-			this.server.Logger().Errorf("Get service node data failed, %v, node: %s", err, zkNode)
+			this.logger.Errorf("Get service node data failed, %v, node: %s", err, zkNode)
 			continue
 		}
 
@@ -64,12 +64,14 @@ func (this *subscribeClient) readServiceData(conn *zk.Conn, nodesPath string, zk
 		var svrNode = new(sd.ServerNode)
 		err = json.Unmarshal(data, svrNode)
 		if err != nil {
-			this.server.Logger().Errorf("Unmarshal service node data failed, %v, node: %s, data: %s", err, zkNode, data)
+			this.logger.Errorf("Unmarshal service node data failed, %v, node: %s, data: %s", err, zkNode, data)
 			continue
 		}
 
-		if svrNode.Name == this.server.Name() && svrNode.AppId == this.server.AppId() {
-			continue
+		if this.server != nil {
+			if svrNode.Name == this.server.Name() && svrNode.AppId == this.server.AppId() {
+				continue
+			}
 		}
 
 		svrNodes = append(svrNodes, svrNode)
@@ -83,17 +85,17 @@ func (this *subscribeClient) itemLoop(conn *zk.Conn, item *subItem) {
 		zkNodes, _, eventChan, err := conn.ChildrenW(nodesPath)
 		if err != nil {
 			if errors.Is(err, zk.ErrNoNode) {
-				this.server.Logger().Warnf("Subscribe service '%s' node was not exists, path: %s", item.svrName, nodesPath)
+				this.logger.Warnf("Subscribe service '%s' node was not exists, path: %s", item.svrName, nodesPath)
 				time.Sleep(time.Second * 10)
 				continue
 			}
-			this.server.Logger().Error(err, ", path: ", nodesPath)
+			this.logger.Error(err, ", path: ", nodesPath)
 			return
 		}
 
 		ss, err := this.readServiceData(conn, nodesPath, zkNodes)
 		if err != nil {
-			this.server.Logger().Error(err, ", path: ", nodesPath)
+			this.logger.Error(err, ", path: ", nodesPath)
 			return
 		}
 
@@ -105,7 +107,7 @@ func (this *subscribeClient) itemLoop(conn *zk.Conn, item *subItem) {
 				return
 			}
 			if event.Err != nil {
-				this.server.Logger().Error(event.Err)
+				this.logger.Error(event.Err)
 				return
 			}
 		case <-this.ctx.Done():

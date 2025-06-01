@@ -1,7 +1,7 @@
 package util
 
 import (
-	"strings"
+	"github.com/oylshe1314/framework/errors"
 	"sync"
 )
 
@@ -61,26 +61,13 @@ func WaitAny[T any](fs ...func() T) (t T) {
 	return t
 }
 
-type WaitAnySucceedError struct {
-	Errs []error
-}
-
-func (this *WaitAnySucceedError) Error() string {
-	var sb strings.Builder
-	for _, err := range this.Errs {
-		sb.WriteString(err.Error())
-		sb.WriteByte('\n')
-	}
-	return sb.String()
-}
-
 type fr[R any] struct {
 	i int
 	r R
 	e error
 }
 
-// WaitAnySucceed return the value of the first returned goroutine execute succeed, or return *WaitAnySucceedError when all of the goroutines execute failed.
+// WaitAnySucceed return the value of the first returned goroutine execute succeed, or return errors.MultiError when all the goroutines execute failed.
 func WaitAnySucceed[T any](fs ...func() (T, error)) (t T, err error) {
 	if len(fs) > 0 {
 		ch := make(chan *fr[T], len(fs)) //Guess why I make the length of the channel equal to the number of goroutines.
@@ -101,7 +88,6 @@ func WaitAnySucceed[T any](fs ...func() (T, error)) (t T, err error) {
 
 		var es int
 		var frs = make([]*fr[T], len(fs))
-
 		for {
 			select {
 			case r := <-ch:
@@ -116,10 +102,11 @@ func WaitAnySucceed[T any](fs ...func() (T, error)) (t T, err error) {
 					frs[r.i] = r
 					if es >= len(fs) {
 						close(ch)
-						err = &WaitAnySucceedError{Errs: make([]error, len(frs))}
+						var errs = make([]error, len(frs))
 						for i := range frs {
-							err.(*WaitAnySucceedError).Errs[i] = frs[i].e
+							errs[i] = frs[i].e
 						}
+						err = errors.MultiError(errs)
 						return
 					}
 				}

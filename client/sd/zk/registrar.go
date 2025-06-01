@@ -32,6 +32,10 @@ func (this *registerClient) SetListener(inner, exter *server.Listener) {
 }
 
 func (this *registerClient) Init() (err error) {
+	if this.server == nil {
+		return errors.Error("Service register-discovery client init 'server' can not be nil")
+	}
+
 	if this.svrNode == nil {
 		return errors.Error("please set service node before init")
 	}
@@ -143,10 +147,10 @@ func (this *registerClient) register(conn *zk.Conn) {
 	for {
 		path, err := this.setServiceNode(conn)
 		if err == nil {
-			this.server.Logger().Infof("Service register success, node: %s", path)
+			this.logger.Infof("Service register success, node: %s", path)
 			break
 		}
-		this.server.Logger().Error(err)
+		this.logger.Error(err)
 		time.Sleep(time.Second * 3)
 	}
 }

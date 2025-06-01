@@ -5,6 +5,7 @@ import (
 	"github.com/go-zookeeper/zk"
 	"github.com/oylshe1314/framework/client/sd"
 	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/server"
 	"time"
 )
@@ -20,6 +21,7 @@ const (
 type client struct {
 	config *sd.Config
 
+	logger log.Logger
 	server server.Server
 
 	rootPath string
@@ -49,8 +51,14 @@ func (this *client) Init() error {
 		return errors.Error("Service register-discovery client init 'config' can not be nil")
 	}
 
+	if len(this.config.Servers) == 0 {
+		return errors.Error("Service register-discovery client init 'config.Servers' can not be empty")
+	}
+
 	if this.server == nil {
-		return errors.Error("Service register-discovery client init 'server' can not be nil")
+		this.logger = log.DefaultLogger
+	} else {
+		this.logger = this.server.Logger()
 	}
 
 	var ok bool

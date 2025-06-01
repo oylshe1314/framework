@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type StringError string
@@ -59,4 +60,17 @@ func Is(err, tag error) bool {
 		return se1.Status() == se2.Status()
 	}
 	return errors.Is(err, tag)
+}
+
+type MultiError []error
+
+func (this MultiError) Error() string {
+	var sb strings.Builder
+	for i, err := range this {
+		if i == 0 {
+			sb.WriteByte('\n')
+		}
+		sb.WriteString(err.Error())
+	}
+	return sb.String()
 }

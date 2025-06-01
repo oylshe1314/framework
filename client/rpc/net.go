@@ -71,7 +71,7 @@ func (this *NetRpcClient) Close() error {
 }
 
 func (this *NetRpcClient) Work() error {
-	this.workChan = make(chan *NetRpcNode, 8)
+	this.workChan = make(chan *NetRpcNode, 64)
 	for {
 		if this.closed {
 			return nil
@@ -343,51 +343,6 @@ func (this *NetRpcClient) MultiRead(service string, appIds []uint32) (MultiResul
 		}
 	}
 	return this.nodesRead(nodes), nil
-}
-
-func (this *NetRpcClient) anyRead(nodes map[uint32]*NetRpcNode) (*net.Message, error) {
-	var fs []func() (*net.Message, error)
-	for _, node := range nodes {
-		var curNode = node
-		fs = append(fs, func() (*net.Message, error) {
-			return curNode.Read()
-		})
-	}
-
-	return util.WaitAnySucceed(fs...)
-}
-
-func (this *NetRpcClient) AnyRead(service string) (MultiResults[*net.Message], error) {
-	var nodes = this.Nodes(service)
-	if nodes == nil {
-		return nil, errors.Error("the node is unavailable")
-	}
-	return this.nodesRead(nodes), nil
-}
-
-func (this *NetRpcClient) AnyOfMultiRead(service string, appIds []uint32) (*net.Message, error) {
-	var nodes = this.Nodes(service)
-	if nodes == nil {
-		return nil, errors.Error("the node is unavailable")
-	}
-
-	var selectNodes = map[uint32]*NetRpcNode{}
-	for _, appId := range appIds {
-		var node = nodes[appId]
-		if node != nil {
-			selectNodes[appId] = node
-		}
-	}
-	return this.anyRead(nodes)
-}
-
-func (this *NetRpcClient) RandRead(service string) (*net.Message, error) {
-	var node = this.RandNode(service)
-	if node == nil {
-		return nil, errors.Error("the node is unavailable")
-	}
-
-	return node.Read()
 }
 
 func (this *NetRpcClient) AppIdRead(service string, appId uint32) (*net.Message, error) {

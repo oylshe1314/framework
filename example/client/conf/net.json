@@ -1,0 +1,11 @@
+{
+    "sdConfig": {
+        "servers": [
+            "127.0.0.1:2181"
+        ],
+        "timeout": 15000,
+        "extra": {
+            "rootPath": "/sk.org/server/test"
+        }
+    }
+}

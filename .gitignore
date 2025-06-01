@@ -1,3 +1,5 @@
 
 # 项目配置文件目录
 .idea
+
+example/server/logs/

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/options"
 	"github.com/oylshe1314/framework/profile"
 	"github.com/oylshe1314/framework/util"
 	"os"
@@ -28,7 +29,7 @@ func start(svr Server) int {
 
 	var showVersion bool
 	var configFile string
-	var flagOptions FlagOptions
+	var flagOptions options.FlagOptions
 
 	flag.BoolVar(&showVersion, "v", false, "# Show version information and exit.")
 	flag.BoolVar(&showVersion, "version", false, "# Show version information and exit.")
@@ -58,7 +59,7 @@ func start(svr Server) int {
 
 	ProgramHash = hashAll[0]
 
-	options, err := ReadOptions(configFile)
+	opts, err := options.ReadJson(configFile)
 	if err != nil {
 		log.DefaultLogger.Error("Read config file failed, ", err)
 		return 1
@@ -78,12 +79,12 @@ func start(svr Server) int {
 
 	ConfigHash = hashAll[0]
 
-	options.Merge(additionalOptions)
+	opts.Merge(additionalOptions)
 
-	logOptions(log.DefaultLogger, options)
+	options.LogOptions(log.DefaultLogger, opts)
 
 	log.DefaultLogger.Info("Server init")
-	err = options.Init(svr)
+	err = opts.Init(svr)
 	if err != nil {
 		log.DefaultLogger.Error("Server init failed, ", err)
 		return 1
