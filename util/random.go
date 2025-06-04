@@ -1,18 +1,15 @@
 package util
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"math/rand/v2"
-	"strings"
 )
 
 func NewRand() *rand.Rand {
-	return rand.New(rand.NewPCG(uint64(UnixMicro()), 0xC7))
+	return rand.New(rand.NewPCG(uint64(UnixMicro()), 0xC5))
 }
 
 func NewRandBySeed(seed int64) *rand.Rand {
-	return rand.New(rand.NewPCG(uint64(seed), 0xC7))
+	return rand.New(rand.NewPCG(uint64(seed), 0xC5))
 }
 
 // RandomRange 在给定范围内随机一个数
@@ -30,14 +27,14 @@ func RandomSelect[T any](list []T, num int) []T {
 		return list
 	}
 
-	var rdm = NewRand()
+	var r = NewRand()
 	var is = make([]int, len(list))
 	for i := range list {
 		is[i] = i
 	}
 
 	for i := 0; i < num; i++ {
-		var ri = rdm.IntN(len(is))
+		var ri = r.IntN(len(is))
 		is[i], is[ri] = is[ri], is[i]
 	}
 
@@ -56,50 +53,56 @@ func RandomWeights[T any, W Number](list []T, weightFunc func(i int) W) (t T) {
 	}
 
 	var rates float64
-	var rdm = NewRand()
+	var r = NewRand()
 	for i := range list {
 		rates += float64(weightFunc(i))
 	}
 
-	var factor = rdm.Float64() * rates
+	var factor = r.Float64() * rates
 	for i, e := range list {
 		rates -= float64(weightFunc(i))
 		if factor >= rates {
 			return e
 		}
 	}
-	return list[rdm.IntN(len(list))]
+	return list[r.IntN(len(list))]
 }
 
 const (
 	// CharsUpperLetter 大写字母
 	CharsUpperLetter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-	// CharsLowerLetter 大写字母
+	// CharsLowerLetter 小写字母
 	CharsLowerLetter = "abcdefghijklmnopqrstuvwxyz"
+
+	// CharsNumber 所有数字
+	CharsNumber = "0123456789"
 
 	//CharsAllLetter 所有所有字母
 	CharsAllLetter = CharsUpperLetter + CharsLowerLetter
 
-	// CharsAllNumber 所有数字
-	CharsAllNumber = "0123456789"
+	// CharsNumbersAndUpper 数字加大写字母
+	CharsNumbersAndUpper = CharsNumber + CharsUpperLetter
 
-	// CharsNumbersAndLetter 数字加字母
-	CharsNumbersAndLetter = CharsAllNumber + CharsLowerLetter
+	// CharsNumbersAndLower 数字加小写字母
+	CharsNumbersAndLower = CharsNumber + CharsLowerLetter
+
+	// CharsNumbersAndAllLetter 数字加小写字母
+	CharsNumbersAndAllLetter = CharsNumber + CharsUpperLetter + CharsLowerLetter
 )
 
 func RandomStrings(chars string, num int, repeated bool) string {
 	var cl = len(chars)
 	if cl == 0 {
-		chars = CharsNumbersAndLetter
+		chars = CharsNumbersAndAllLetter
 		cl = len(chars)
 	}
 
-	var rdm = NewRand()
+	var r = NewRand()
 	if repeated {
 		var ret = make([]byte, num)
 		for i := 0; i < num; i++ {
-			ret[i] = chars[rdm.IntN(cl)]
+			ret[i] = chars[r.IntN(cl)]
 		}
 		return string(ret)
 	} else {
@@ -109,17 +112,4 @@ func RandomStrings(chars string, num int, repeated bool) string {
 
 		return string(RandomSelect([]byte(chars), num))
 	}
-}
-
-func RandomToken() string {
-	var src []byte
-	var now = UnixMicro()
-	var r = NewRandBySeed(now)
-	src = Uint64ToBytes(src, uint64(now))
-	src = Uint64ToBytes(src, r.Uint64())
-	src = Uint64ToBytes(src, r.Uint64())
-	src = Uint64ToBytes(src, r.Uint64())
-	var h = sha256.New()
-	h.Write(src)
-	return strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
 }

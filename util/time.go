@@ -32,6 +32,11 @@ func UnixMicro() int64 {
 	return time.Now().UnixMicro()
 }
 
+// UnixNano 纳秒时间戳没有时区
+func UnixNano() int64 {
+	return time.Now().UnixNano()
+}
+
 // DateOnly  仅返回日期，按UTC8时区处理
 func DateOnly() string {
 	return Now().Format(time.DateOnly)
@@ -52,8 +57,8 @@ func TimeFormat(layout string) string {
 	return Now().Format(layout)
 }
 
-// ParseUnitx 解析为秒时间戳，按UTC8时区处理
-func ParseUnitx(layout, value string) (int64, error) {
+// ParseUnix 解析为秒时间戳，按UTC8时区处理
+func ParseUnix(layout, value string) (int64, error) {
 	if value == "" {
 		return 0, nil
 	}

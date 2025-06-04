@@ -169,7 +169,7 @@ func DecimalTo36(decimal int) string {
 	var ary [64]byte
 	var i = 0
 	for i = 63; i >= 0; i-- {
-		ary[i] = CharsNumbersAndLetter[decimal%36]
+		ary[i] = CharsNumbersAndLower[decimal%36]
 		decimal /= 36
 		if decimal == 0 {
 			break

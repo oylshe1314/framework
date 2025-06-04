@@ -38,7 +38,7 @@ func (this *Message) Read(v interface{}) error {
 		case "application/x-www-form-urlencoded":
 			return this.readUrlencoded(v, params)
 		case "multipart/form-data":
-			return this.readFormdata(v, params)
+			return this.readFormData(v, params)
 		default:
 			return errors.Error(http.StatusText(http.StatusUnsupportedMediaType))
 		}
@@ -61,7 +61,7 @@ func (this *Message) readUrlencoded(v interface{}, params map[string]string) err
 	return UrlValues(values).read(v)
 }
 
-func (this *Message) readFormdata(v interface{}, params map[string]string) error {
+func (this *Message) readFormData(v interface{}, params map[string]string) error {
 	form, err := multipart.NewReader(this.R.Body, params["boundary"]).ReadForm(-1)
 	if err != nil {
 		return err
