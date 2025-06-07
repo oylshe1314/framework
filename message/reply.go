@@ -27,11 +27,11 @@ func NewReply(v interface{}) *Reply {
 	}
 }
 
-func (this *Reply) Error() error {
+func (this *Reply) Error() errors.StatusError {
 	if this.Status == errors.StatusSuccessful {
 		return nil
 	} else {
-		return errors.Error(this.Message)
+		return errors.Status(this.Status, this.Message)
 	}
 }
 

@@ -2,7 +2,6 @@ package db
 
 import (
 	"github.com/oylshe1314/framework/errors"
-	"github.com/oylshe1314/framework/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -43,24 +42,24 @@ func (this *MongoClient) Collection(name string) *mongo.Collection {
 }
 
 func (this *MongoClient) Counter(key string, inc uint64) (uint64, error) {
-	if inc == 0 {
-		return 0, nil
+	if inc < 1 {
+		inc = 1
 	}
 
 	var upsert = true
-	var pair = &util.Pair[string, uint64]{Key: key}
+	var counter = &Counter[string, uint64]{Id: key}
 	for {
 		var err = this.Collection("counter").FindOneAndUpdate(
 			this.Context(),
-			bson.M{"_id": pair.Key},
+			bson.M{"_id": counter.Id},
 			bson.M{"$inc": bson.M{"value": inc}},
 			&options.FindOneAndUpdateOptions{Upsert: &upsert},
-		).Decode(&pair)
+		).Decode(&counter)
 		if err != nil {
 			if !errors.Is(err, mongo.ErrNoDocuments) {
 				return 0, err
 			}
 		}
-		return pair.Value + 1, nil
+		return counter.Value + 1, nil
 	}
 }

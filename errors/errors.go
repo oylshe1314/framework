@@ -43,14 +43,14 @@ type statusError struct {
 }
 
 func (this *statusError) Error() string {
-	return this.message
+	return fmt.Sprintf("status: %d, message: %s", this.status, this.message)
 }
 
 func (this *statusError) Status() int {
 	return this.status
 }
 
-func Status(status int, message string) error {
+func Status(status int, message string) StatusError {
 	return &statusError{status: status, message: message}
 }
 

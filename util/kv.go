@@ -1,7 +1,7 @@
 package util
 
 type Pair[K comparable, V any] struct {
-	Key   K `json:"key" bson:"_id"`
+	Key   K `json:"key" bson:"key"`
 	Value V `json:"value" bson:"value"`
 }
 

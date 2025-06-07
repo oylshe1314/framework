@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/oylshe1314/framework/errors"
-	"github.com/oylshe1314/framework/util"
 	"time"
 )
 
@@ -75,18 +74,18 @@ func (this *MysqlClient) Counter(key string, inc uint64) (uint64, error) {
 		return 0, nil
 	}
 
-	var pair = &util.Pair[string, uint64]{Key: key}
+	var counter = &Counter[string, uint64]{Id: key}
 
 	tx, err := this.Begin()
 	if err != nil {
 		return 0, err
 	}
 
-	row := tx.QueryRowContext(this.Context(), "select `value` from counter where `key`=?;", pair.Key)
-	if err = row.Scan(&pair.Value); err != nil {
+	row := tx.QueryRowContext(this.Context(), "select `value` from counter where `key`=?;", counter.Id)
+	if err = row.Scan(&counter.Value); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			pair.Value = 0
-			_, err = tx.Exec("insert into counter (`key`, `value`) value (?, ?);", pair.Key, pair.Value+inc)
+			counter.Value = 0
+			_, err = tx.Exec("insert into counter (`key`, `value`) value (?, ?);", counter.Id, counter.Value+inc)
 			if err != nil {
 				return 0, err
 			}
@@ -94,7 +93,7 @@ func (this *MysqlClient) Counter(key string, inc uint64) (uint64, error) {
 			return 0, err
 		}
 	} else {
-		_, err = tx.Exec("update counter set `value`=? where `key`=?;", pair.Value+inc, pair.Key)
+		_, err = tx.Exec("update counter set `value`=? where `key`=?;", counter.Value+inc, counter.Id)
 		if err != nil {
 			return 0, err
 		}
@@ -105,5 +104,5 @@ func (this *MysqlClient) Counter(key string, inc uint64) (uint64, error) {
 		return 0, err
 	}
 
-	return pair.Value + 1, nil
+	return counter.Value + 1, nil
 }

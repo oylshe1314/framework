@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/util"
 )
 
 type databaseClient struct {
@@ -52,4 +53,9 @@ func (this *databaseClient) Close() error {
 		this.cancel()
 	}
 	return nil
+}
+
+type Counter[K comparable, V util.Integer] struct {
+	Id    K `json:"id" bson:"_id" sql:"id"`
+	Value V `json:"value" bson:"value" sql:"value"`
 }

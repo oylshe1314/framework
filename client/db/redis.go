@@ -49,7 +49,7 @@ func (this *RedisClient) Close() (err error) {
 }
 
 // Counter return the value before the increment
-func (this *RedisClient) Counter(key string, inc uint64) (uint64, error) {
+func (this *RedisClient) Counter(key string, inc uint64) (counter uint64, err error) {
 	if inc == 0 {
 		return 0, nil
 	}
@@ -59,10 +59,6 @@ func (this *RedisClient) Counter(key string, inc uint64) (uint64, error) {
 		return 0, err
 	}
 
-	counter, err := util.StringToInteger1[uint64](val)
-	if err != nil {
-		return 0, err
-	}
-
-	return counter + 1 - inc, nil
+	err = util.StringToInteger2(val, &counter)
+	return
 }

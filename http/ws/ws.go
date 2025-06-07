@@ -8,6 +8,7 @@ import (
 	"io"
 	"runtime/debug"
 	"sync"
+	"time"
 )
 
 const HeaderLength uint32 = 8
@@ -33,7 +34,7 @@ func (this *Message) Read(v interface{}) error {
 		return nil
 	}
 
-	var err = this.Conn.handler.messageCodec().Decode(this.Body, v)
+	var err = this.Conn.handler.getCodec().Decode(this.Body, v)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ type Handler interface {
 	handleWsMessage(*Message)
 	handleWsConnect(*Conn)
 	handleWsDisconnect(*Conn)
-	messageCodec() message.Codec
+	getCodec() message.Codec
 }
 
 type Conn struct {
@@ -68,19 +69,15 @@ type Conn struct {
 	handler Handler
 
 	object interface{}
+
+	beatTime   int64
+	beatPeriod int64
+	beatModId  uint16
+	beatMsgId  uint16
 }
 
 func NewConn(conn *websocket.Conn, logger log.Logger, handler Handler) *Conn {
 	return &Conn{conn: conn, logger: logger, handler: handler}
-}
-
-func (this *Conn) Read() (*Message, error) {
-	_, msg, err := this.conn.ReadMessage()
-	if err != nil {
-		return nil, err
-	}
-
-	return newMessage(util.BytesToUint16(msg[0:2]), util.BytesToUint16(msg[2:4]), util.BytesToUint32(msg[4:8]), msg[8:], this), nil
 }
 
 func (this *Conn) RemoteAddr() string {
@@ -107,6 +104,23 @@ func (this *Conn) ObjectUid() (uid uint64) {
 	return
 }
 
+func (this *Conn) isHeartbeat(modId, msgId uint16) bool {
+	return this.beatModId == 0 || this.beatMsgId == 0 || modId != this.beatModId || msgId != this.beatMsgId
+}
+
+func (this *Conn) Beat(now int64) {
+	this.beatTime = now
+}
+
+func (this *Conn) Read() (*Message, error) {
+	_, msg, err := this.conn.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+
+	return newMessage(util.BytesToUint16(msg[0:2]), util.BytesToUint16(msg[2:4]), util.BytesToUint32(msg[4:8]), msg[8:], this), nil
+}
+
 func (this *Conn) send(modId, msgId uint16, body []byte) (err error) {
 	var msg = make([]byte, HeaderLength+uint32(len(body)))
 
@@ -128,7 +142,7 @@ func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 		this.logger.Debugf("[%s:%d] -> ModId: %d, MsgId: %d, Msg: %s", this.RemoteAddr(), this.ObjectUid(), modId, msgId, util.ToJsonString(v))
 	}
 
-	body, err := this.handler.messageCodec().Encode(v)
+	body, err := this.handler.getCodec().Encode(v)
 	if err != nil {
 		return err
 	}
@@ -169,6 +183,33 @@ func (this *Conn) Serve() error {
 
 		this.handler.handleWsMessage(msg)
 	}
+}
+
+func (this *Conn) Beating(modId, msgId uint16, period int64) {
+	this.beatPeriod = period
+	this.beatModId = modId
+	this.beatMsgId = msgId
+	this.beatTime = util.Unix()
+	go func() {
+		defer func() {
+			var err = recover()
+			if err != nil {
+				this.logger.Error(err)
+				this.logger.Error(string(debug.Stack()))
+			}
+		}()
+		this.logger.Infof("[%s] 心跳协程启动, time: %d", this.RemoteAddr(), this.beatTime)
+		for !this.closed {
+			time.Sleep(time.Second)
+			var now = util.Unix()
+			if now-this.beatTime > period {
+				this.logger.Warnf("[%s] 连接心跳超时, time: %d", this.RemoteAddr(), this.beatTime)
+				this.Close()
+				break
+			}
+		}
+		this.logger.Infof("[%s] 心跳协程退出, time: %d", this.RemoteAddr(), this.beatTime)
+	}()
 }
 
 func (this *Conn) Close() (err error) {
@@ -235,7 +276,7 @@ func (this *ConnMux) SetCodec(codec message.Codec) {
 	this.codec = codec
 }
 
-func (this *ConnMux) messageCodec() message.Codec {
+func (this *ConnMux) getCodec() message.Codec {
 	if this.codec == nil {
 		return message.DefaultCodec
 	}

@@ -36,7 +36,7 @@ func (this *Message) Read(v interface{}) error {
 		return nil
 	}
 
-	var err = this.Conn.handler.messageCodec().Decode(this.Body, v)
+	var err = this.Conn.handler.getCodec().Decode(this.Body, v)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ type Handler interface {
 	handleConnect(*Conn)
 	handleDisconnect(*Conn)
 	handleMessage(*Message)
-	messageCodec() message.Codec
+	getCodec() message.Codec
 }
 
 type Conn struct {
@@ -173,7 +173,7 @@ func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 			this.logger.Debugf("[%s:%d] -> ModId: %d, MsgId: %d, Msg: %s", this.RemoteAddr(), this.ObjectUid(), modId, msgId, util.ToJsonString(v))
 		}
 	}
-	body, err := this.handler.messageCodec().Encode(v)
+	body, err := this.handler.getCodec().Encode(v)
 	if err != nil {
 		this.logger.Error(err)
 		return err
@@ -308,7 +308,7 @@ func (this *ConnMux) SetCodec(codec message.Codec) {
 	this.codec = codec
 }
 
-func (this *ConnMux) messageCodec() message.Codec {
+func (this *ConnMux) getCodec() message.Codec {
 	if this.codec == nil {
 		return message.DefaultCodec
 	}
