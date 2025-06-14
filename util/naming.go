@@ -47,36 +47,20 @@ func UpperCamelCase(s string) string {
 
 // SplitCameCase 按驼峰切割
 func SplitCameCase(s string) []string {
+	var li = 0
 	var ss []string
 	var rs = []rune(s)
-
-	var word []rune
-	var uppers int
-	var lowers int
-	for _, r := range rs {
-		if unicode.IsUpper(r) {
-			if lowers > 0 {
-				ss = append(ss, string(word))
-				word = []rune{r}
-				lowers = 0
-				uppers = 1
-			} else {
-				word = append(word, r)
-				uppers += 1
-			}
-		} else {
-			if uppers > 1 {
-				ss = append(ss, string(word[:uppers-1]))
-				word = word[uppers-1:]
-				uppers = 1
-			}
-			word = append(word, r)
-			lowers += 1
+	for i, r := range rs {
+		if unicode.IsUpper(r) && i-li > 0 {
+			ss = append(ss, string(rs[li:i]))
+			li = i
 		}
 	}
-	if len(word) > 0 {
-		ss = append(ss, string(word))
+
+	if li < len(rs) {
+		ss = append(ss, string(rs[li:]))
 	}
+
 	return ss
 }
 

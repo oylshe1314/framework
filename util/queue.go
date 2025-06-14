@@ -16,9 +16,9 @@ type node[T any] struct {
 }
 
 type linkedQueue[T any] struct {
-	l int      //length
-	h *node[T] //head
-	t *node[T] //tail
+	l int
+	h *node[T]
+	t *node[T]
 }
 
 func NewLinkedQueue[T any]() Queue[T] {

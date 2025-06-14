@@ -29,7 +29,7 @@ func newMessage(modId, msgId uint16, length uint32, body []byte, conn *Conn) *Me
 func (this *Message) Read(v interface{}) error {
 	if v == nil || len(this.Body) == 0 {
 		if this.Conn.logger.IsDebugEnabled() {
-			if this.Conn.isHeartbeat(this.ModId, this.MsgId) {
+			if !this.Conn.isHeartbeat(this.ModId, this.MsgId) {
 				this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(nil))
 			}
 		}
@@ -42,7 +42,7 @@ func (this *Message) Read(v interface{}) error {
 	}
 
 	if this.Conn.logger.IsDebugEnabled() {
-		if this.Conn.isHeartbeat(this.ModId, this.MsgId) {
+		if !this.Conn.isHeartbeat(this.ModId, this.MsgId) {
 			this.Conn.logger.Debugf("[%s:%d] <- ModId: %d, MsgId: %d, Msg: %s", this.Conn.RemoteAddr(), this.Conn.ObjectUid(), this.ModId, this.MsgId, util.ToJsonString(v))
 		}
 	}
@@ -113,7 +113,7 @@ func (this *Conn) ObjectUid() (uid uint64) {
 }
 
 func (this *Conn) isHeartbeat(modId, msgId uint16) bool {
-	return this.beatModId == 0 || this.beatMsgId == 0 || modId != this.beatModId || msgId != this.beatMsgId
+	return modId == this.beatModId && msgId == this.beatMsgId && this.beatModId != 0 && this.beatMsgId != 0
 }
 
 func (this *Conn) Beat(now int64) {
@@ -169,7 +169,7 @@ func (this *Conn) send(modId, msgId uint16, body []byte) (err error) {
 
 func (this *Conn) Send(modId, msgId uint16, v interface{}) (err error) {
 	if this.logger.IsDebugEnabled() {
-		if this.isHeartbeat(modId, msgId) {
+		if !this.isHeartbeat(modId, msgId) {
 			this.logger.Debugf("[%s:%d] -> ModId: %d, MsgId: %d, Msg: %s", this.RemoteAddr(), this.ObjectUid(), modId, msgId, util.ToJsonString(v))
 		}
 	}

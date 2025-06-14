@@ -27,3 +27,13 @@ func MapValues[K comparable, V any](m map[K]V) []V {
 	}
 	return values
 }
+
+func MapFindValue[K comparable, V any](m map[K]V, vCmp func(V) bool) (rv V) {
+	for _, v := range m {
+		if vCmp(v) {
+			rv = v
+			break
+		}
+	}
+	return
+}

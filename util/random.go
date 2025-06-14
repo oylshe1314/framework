@@ -75,19 +75,19 @@ const (
 	// CharsLowerLetter 小写字母
 	CharsLowerLetter = "abcdefghijklmnopqrstuvwxyz"
 
-	// CharsAllNumber 所有数字
+	// CharsNumber 所有数字
 	CharsNumber = "0123456789"
 
 	//CharsAllLetter 所有所有字母
 	CharsAllLetter = CharsUpperLetter + CharsLowerLetter
 
-	// CharsNumbersAndLetter 数字加大写字母
+	// CharsNumbersAndUpper 数字加大写字母
 	CharsNumbersAndUpper = CharsNumber + CharsUpperLetter
 
-	// CharsNumbersAndLetter 数字加小写字母
+	// CharsNumbersAndLower 数字加小写字母
 	CharsNumbersAndLower = CharsNumber + CharsLowerLetter
 
-	// CharsNumbersAndLetter 数字加小写字母
+	// CharsNumbersAndAllLetter 数字加大小写字母
 	CharsNumbersAndAllLetter = CharsNumber + CharsUpperLetter + CharsLowerLetter
 )
 

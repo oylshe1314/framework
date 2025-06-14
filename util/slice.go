@@ -17,3 +17,13 @@ func SliceConvert[S, R any](s []S, converter func(s S) R) []R {
 	}
 	return r
 }
+
+func SliceFindValue[T any](s []T, cmp func(int) bool) (t T) {
+	for i := range s {
+		if cmp(i) {
+			t = s[i]
+			return
+		}
+	}
+	return
+}
