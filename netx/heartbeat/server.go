@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type BeatServer struct {
+type HeartbeatServer struct {
 	option *Option
 
 	closed bool
@@ -23,13 +23,17 @@ type BeatServer struct {
 	heartbeatHandler transport.MessageHandler
 }
 
-func (server *BeatServer) SetOption(option *Option) {
+func (server *HeartbeatServer) SetOption(option *Option) {
 	server.option = option
 }
 
-func (this *BeatServer) Init(ctx context.Context) error {
+func (this *HeartbeatServer) Name() string {
+	return "heartbeatServer"
+}
+
+func (this *HeartbeatServer) Init(ctx context.Context) error {
 	if this.option == nil {
-		return errors.New("'BeatServer' option is nil")
+		return errors.New("'HeartbeatServer' option is nil")
 	}
 
 	if this.option.Timeout == 0 {
@@ -43,7 +47,7 @@ func (this *BeatServer) Init(ctx context.Context) error {
 	return nil
 }
 
-func (this *BeatServer) tick() {
+func (this *HeartbeatServer) tick() {
 	var slot = int(this.ticks.Add(1)-1) % int(this.option.Timeout)
 
 	this.mutex.Lock()
@@ -61,7 +65,7 @@ func (this *BeatServer) tick() {
 	clear(oldSlot)
 }
 
-func (this *BeatServer) start() error {
+func (this *HeartbeatServer) start() error {
 	this.closed = false
 	this.ticks.Store(0)
 	this.ticker = time.NewTicker(time.Second)
@@ -78,11 +82,11 @@ func (this *BeatServer) start() error {
 	return nil
 }
 
-func (this *BeatServer) Start() error {
+func (this *HeartbeatServer) Start() error {
 	return this.start()
 }
 
-func (this *BeatServer) Close() error {
+func (this *HeartbeatServer) Close() error {
 	if !this.closed {
 		this.closed = true
 		this.ticker.Stop()
@@ -90,7 +94,7 @@ func (this *BeatServer) Close() error {
 	return nil
 }
 
-func (this *BeatServer) Add(conn transport.Conn) {
+func (this *HeartbeatServer) Add(conn transport.Conn) {
 	this.Remove(conn)
 	var slot = (int(this.ticks.Load()) + int(this.option.Timeout) - 1) % int(this.option.Timeout)
 
@@ -101,7 +105,7 @@ func (this *BeatServer) Add(conn transport.Conn) {
 	this.slots[slot][conn] = struct{}{}
 }
 
-func (this *BeatServer) Remove(conn transport.Conn) {
+func (this *HeartbeatServer) Remove(conn transport.Conn) {
 	slot, ok := conn.Attribute().Get("slot")
 	if !ok {
 		return
@@ -112,11 +116,11 @@ func (this *BeatServer) Remove(conn transport.Conn) {
 	delete(this.slots[slot.(int)], conn)
 }
 
-func (this *BeatServer) HeartbeatHandler(handler transport.MessageHandlerFunc) {
+func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandlerFunc) {
 	this.heartbeatHandler = handler
 }
 
-func (this *BeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandlerFunc) {
+func (this *HeartbeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandlerFunc) {
 	return this.option.ModId, this.option.MsgId, func(conn transport.Conn, msg transport.Message) {
 		this.Add(conn)
 		if this.heartbeatHandler != nil {

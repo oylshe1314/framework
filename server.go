@@ -6,6 +6,7 @@ import (
 )
 
 type Server interface {
+	Name() string
 	Init(context.Context) error
 	Start() error
 	Close() error
@@ -17,6 +18,10 @@ type NamedServer struct {
 
 func (this *NamedServer) SetName(name string) {
 	this.name = name
+}
+
+func (this *NamedServer) Name() string {
+	return this.name
 }
 
 func (this *NamedServer) Init(ctx context.Context) error {
@@ -32,8 +37,4 @@ func (this *NamedServer) Start() error {
 
 func (this *NamedServer) Close() error {
 	return nil
-}
-
-func (this *NamedServer) Name() string {
-	return this.name
 }

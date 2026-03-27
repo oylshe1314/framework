@@ -6,7 +6,11 @@ import (
 )
 
 func TestNewZeroLogger(t *testing.T) {
-	var logger = NewZeroLogger(LevelDebug, os.Stdout)
+	var logger, err = newZeroLogger(LevelDebug, os.Stdout)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	logger.WithField("name", "Lisa").WithField("age", 18).WithField("sexy", true).Error("error")
 	logger.WithField("name", "Lisa").WithField("age", 18).WithField("sexy", true).Warn("warn")

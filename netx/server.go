@@ -17,6 +17,8 @@ import (
 type NetServer struct {
 	option *Option
 
+	closed bool
+
 	codec  codec.Codec
 	logger log.Logger
 
@@ -25,13 +27,15 @@ type NetServer struct {
 
 	mux *route.ConnMux
 
-	closed bool
-
 	connStore store.Store[*conn, struct{}]
 }
 
 func (this *NetServer) SetOption(option *Option) {
 	this.option = option
+}
+
+func (this *NetServer) Name() string {
+	return "netServer"
 }
 
 func (this *NetServer) Init(ctx context.Context) error {
@@ -68,7 +72,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	this.mux = route.NewConnMux()
 
-	var beatServer = framework.ServerFromContext[*heartbeat.BeatServer](ctx, "heartbeatServer")
+	var beatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
 	if beatServer != nil {
 		this.mux.MessageHandler(beatServer.HandleHeartbeat())
 	}

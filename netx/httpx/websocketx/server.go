@@ -5,6 +5,7 @@ import (
 	"framework"
 	"framework/log"
 	"framework/netx/codec"
+	"framework/netx/heartbeat"
 	"framework/netx/httpx"
 	"framework/netx/route"
 	"framework/netx/transport"
@@ -25,12 +26,18 @@ type WebsocketServer struct {
 
 	upgrader *websocket.Upgrader
 
+	mux *route.ConnMux
+
 	connStore store.Store[*conn, struct{}]
 }
 
 func (this *WebsocketServer) SetOption(option *Option) {
 	this.HttpServer.SetOption(&option.Option)
 	this.option = option
+}
+
+func (this *WebsocketServer) Name() string {
+	return "websocketServer"
 }
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
@@ -54,6 +61,11 @@ func (this *WebsocketServer) Init(ctx context.Context) error {
 	this.upgrader = &websocket.Upgrader{
 		Error:       this.handleError,
 		CheckOrigin: this.checkOrigin,
+	}
+
+	var beatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
+	if beatServer != nil {
+		this.mux.MessageHandler(beatServer.HandleHeartbeat())
 	}
 
 	this.connStore = store.New[*conn, struct{}]()
@@ -111,4 +123,20 @@ func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.H
 
 func (this *WebsocketServer) HandleUpgrade(pattern string, handler route.ConnHandler) {
 	this.Any(pattern, this.upgradeHandlerFunc(handler))
+}
+
+func (this *WebsocketServer) ConnectHandler(handler func(transport.Conn)) {
+	this.mux.ConnectHandler(handler)
+}
+
+func (this *WebsocketServer) DisconnectHandler(handler func(transport.Conn)) {
+	this.mux.DisconnectHandler(handler)
+}
+
+func (this *WebsocketServer) DefaultHandler(handler transport.MessageHandlerFunc) {
+	this.mux.DefaultHandler(handler)
+}
+
+func (this *WebsocketServer) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandlerFunc) {
+	this.mux.MessageHandler(modId, msgId, handler)
 }
