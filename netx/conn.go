@@ -24,8 +24,8 @@ type conn struct {
 	closed bool
 }
 
-func newConn(cc net.Conn, logger log.Logger, codec codec.Codec) *conn {
-	return &conn{conn: cc, logger: logger, codec: codec}
+func newConn(c net.Conn, logger log.Logger, codec codec.Codec) *conn {
+	return &conn{conn: c, logger: logger, codec: codec}
 }
 
 func (this *conn) Close() error {

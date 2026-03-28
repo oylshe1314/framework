@@ -4,13 +4,14 @@ import (
 	"context"
 	"framework/errors"
 	"framework/netx/transport"
+	"framework/option"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 type HeartbeatServer struct {
-	option *Option
+	option.Optional[*Option]
 
 	closed bool
 
@@ -23,20 +24,16 @@ type HeartbeatServer struct {
 	heartbeatHandler transport.MessageHandler
 }
 
-func (this *HeartbeatServer) SetOption(option *Option) {
-	this.option = option
-}
-
 func (this *HeartbeatServer) Init(ctx context.Context) error {
-	if this.option == nil {
+	if this.GetOption() == nil {
 		return errors.New("'HeartbeatServer' option is nil")
 	}
 
-	if this.option.Timeout == 0 {
-		this.option.Timeout = time.Second * 120
+	if this.GetOption().Timeout == 0 {
+		this.GetOption().Timeout = time.Second * 120
 	}
 
-	this.slots = make([]map[transport.Conn]struct{}, this.option.Timeout)
+	this.slots = make([]map[transport.Conn]struct{}, this.GetOption().Timeout)
 	for i := range this.slots {
 		this.slots[i] = make(map[transport.Conn]struct{})
 	}
@@ -44,7 +41,7 @@ func (this *HeartbeatServer) Init(ctx context.Context) error {
 }
 
 func (this *HeartbeatServer) tick() {
-	var slot = int(this.ticks.Add(1)-1) % int(this.option.Timeout)
+	var slot = int(this.ticks.Add(1)-1) % int(this.GetOption().Timeout)
 
 	this.mutex.Lock()
 	oldSlot := this.slots[slot]
@@ -92,7 +89,7 @@ func (this *HeartbeatServer) Close() error {
 
 func (this *HeartbeatServer) Add(conn transport.Conn) {
 	this.Remove(conn)
-	var slot = (int(this.ticks.Load()) + int(this.option.Timeout) - 1) % int(this.option.Timeout)
+	var slot = (int(this.ticks.Load()) + int(this.GetOption().Timeout) - 1) % int(this.GetOption().Timeout)
 
 	conn.Attribute().Put("slot", slot)
 
@@ -117,7 +114,7 @@ func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandlerFu
 }
 
 func (this *HeartbeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandlerFunc) {
-	return this.option.ModId, this.option.MsgId, func(conn transport.Conn, msg transport.Message) {
+	return this.GetOption().ModId, this.GetOption().MsgId, func(conn transport.Conn, msg transport.Message) {
 		this.Add(conn)
 		if this.heartbeatHandler != nil {
 			this.heartbeatHandler.Handle(conn, msg)

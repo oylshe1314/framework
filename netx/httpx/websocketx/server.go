@@ -3,12 +3,14 @@ package websocketx
 import (
 	"context"
 	"framework"
+	"framework/errors"
 	"framework/log"
 	"framework/netx/codec"
 	"framework/netx/heartbeat"
 	"framework/netx/httpx"
 	"framework/netx/route"
 	"framework/netx/transport"
+	"framework/option"
 	"framework/store"
 	"net/http"
 
@@ -19,7 +21,7 @@ import (
 type WebsocketServer struct {
 	httpx.HttpServer
 
-	option *Option
+	option.Optional[*Option]
 
 	codec  codec.Codec
 	logger log.Logger
@@ -31,13 +33,13 @@ type WebsocketServer struct {
 	connStore store.Store[*conn, struct{}]
 }
 
-func (this *WebsocketServer) SetOption(option *Option) {
-	this.option = option
-}
-
 func (this *WebsocketServer) Init(ctx context.Context) error {
+	if this.GetOption() == nil {
+		return errors.New("'NetServer' option is nil")
+	}
+
 	var err error
-	this.codec, err = codec.NewCodec(this.option.Codec)
+	this.codec, err = codec.NewCodec(this.GetOption().Codec)
 	if err != nil {
 		return err
 	}
@@ -75,14 +77,14 @@ func (this *WebsocketServer) handleError(w http.ResponseWriter, r *http.Request,
 }
 
 func (this *WebsocketServer) checkOrigin(request *http.Request) bool {
-	if len(this.option.AllowOrigins) == 0 {
+	if len(this.GetOption().AllowOrigins) == 0 {
 		return true
 	}
-	if len(this.option.AllowOrigins) == 1 && this.option.AllowOrigins[0] == "*" {
+	if len(this.GetOption().AllowOrigins) == 1 && this.GetOption().AllowOrigins[0] == "*" {
 		return true
 	}
 	var origin = request.Header.Get("Origin")
-	for _, allowOrigin := range this.option.AllowOrigins {
+	for _, allowOrigin := range this.GetOption().AllowOrigins {
 		if origin == allowOrigin {
 			return true
 		}

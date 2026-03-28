@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+type Optional[Opt any] struct {
+	opt Opt
+}
+
+func (this *Optional[Opt]) SetOption(opt Opt) {
+	this.opt = opt
+}
+
+func (this *Optional[Opt]) GetOption() Opt {
+	return this.opt
+}
+
 type Option map[string]any
 
 func (option Option) Get(key string) any {

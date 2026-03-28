@@ -3,29 +3,26 @@ package log
 import (
 	"context"
 	"framework/errors"
+	"framework/option"
 )
 
 type LoggerServer struct {
-	option *Option
+	option.Optional[*Option]
 
 	logger Logger
 }
 
-func (this *LoggerServer) SetOption(option *Option) {
-	this.option = option
-}
-
 func (this *LoggerServer) Init(ctx context.Context) error {
-	if this.option == nil {
+	if this.GetOption() == nil {
 		return errors.New("'LoggerServer' option is nil")
 	}
 
-	writer, err := NewFileWriter(this.option)
+	writer, err := NewFileWriter(this.GetOption())
 	if err != nil {
 		return err
 	}
 
-	logger, err := New(writer, this.option)
+	logger, err := NewLogger(writer, this.GetOption())
 	if err != nil {
 		return err
 	}

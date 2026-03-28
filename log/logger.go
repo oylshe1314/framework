@@ -49,7 +49,7 @@ type Logger interface {
 	io.Closer
 }
 
-func New(writer io.Writer, option *Option) (Logger, error) {
+func NewLogger(writer io.Writer, option *Option) (Logger, error) {
 	switch option.Logger {
 	case "zerolog":
 		var options []zeroOption

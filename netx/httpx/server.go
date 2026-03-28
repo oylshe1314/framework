@@ -5,6 +5,7 @@ import (
 	"framework"
 	"framework/errors"
 	"framework/log"
+	"framework/option"
 	"net"
 	"net/http"
 
@@ -14,7 +15,7 @@ import (
 type HttpServer struct {
 	gin.IRouter
 
-	option *Option
+	option.Optional[*Option]
 
 	logger log.Logger
 
@@ -25,25 +26,21 @@ type HttpServer struct {
 	httpServer *http.Server
 }
 
-func (this *HttpServer) SetOption(option *Option) {
-	this.option = option
-}
-
 func (this *HttpServer) Init(ctx context.Context) error {
-	if this.option == nil {
+	if this.GetOption() == nil {
 		return errors.New("'HttpServer' option is nil")
 	}
 
 	var err error
-	switch this.option.Network {
+	switch this.GetOption().Network {
 	case "tcp":
-		this.address, err = net.ResolveTCPAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveTCPAddr(this.GetOption().Network, this.GetOption().Address)
 	case "udp":
-		this.address, err = net.ResolveUDPAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveUDPAddr(this.GetOption().Network, this.GetOption().Address)
 	case "unix":
-		this.address, err = net.ResolveUnixAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveUnixAddr(this.GetOption().Network, this.GetOption().Address)
 	default:
-		return errors.Errorf("unknown network '%s'", this.option.Network)
+		return errors.Errorf("unknown network '%s'", this.GetOption().Network)
 	}
 	if err != nil {
 		return err
@@ -61,18 +58,18 @@ func (this *HttpServer) Init(ctx context.Context) error {
 		Handler: this.ginEngine.Handler(),
 	}
 
-	if this.option.BasePath == "" {
-		this.option.BasePath = "/"
+	if this.GetOption().BasePath == "" {
+		this.GetOption().BasePath = "/"
 	}
 
-	if this.option.BasePath != "/" {
-		this.IRouter = this.ginEngine.Group(this.option.BasePath)
+	if this.GetOption().BasePath != "/" {
+		this.IRouter = this.ginEngine.Group(this.GetOption().BasePath)
 	} else {
 		this.IRouter = this.ginEngine
 	}
 
-	if this.option.HtmlPath != "" {
-		this.ginEngine.LoadHTMLGlob(this.option.HtmlPath)
+	if this.GetOption().HtmlPath != "" {
+		this.ginEngine.LoadHTMLGlob(this.GetOption().HtmlPath)
 	}
 
 	return nil
@@ -92,8 +89,8 @@ func (this *HttpServer) Start() error {
 }
 
 func (this *HttpServer) serve() error {
-	if this.option.Tls != nil {
-		return this.httpServer.ServeTLS(this.listener, this.option.Tls.CertFile, this.option.Tls.KeyFile)
+	if this.GetOption().Tls != nil {
+		return this.httpServer.ServeTLS(this.listener, this.GetOption().Tls.CertFile, this.GetOption().Tls.KeyFile)
 	} else {
 		return this.httpServer.Serve(this.listener)
 	}

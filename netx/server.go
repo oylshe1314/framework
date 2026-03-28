@@ -9,13 +9,14 @@ import (
 	"framework/netx/heartbeat"
 	"framework/netx/route"
 	"framework/netx/transport"
+	"framework/option"
 	"framework/store"
 	"net"
 	"runtime/debug"
 )
 
 type NetServer struct {
-	option *Option
+	option.Optional[*Option]
 
 	closed bool
 
@@ -30,31 +31,31 @@ type NetServer struct {
 	connStore store.Store[*conn, struct{}]
 }
 
-func (this *NetServer) SetOption(option *Option) {
-	this.option = option
-}
+//func (this *NetServer) SetOption(option *Option) {
+//	this.option = option
+//}
 
 func (this *NetServer) Init(ctx context.Context) error {
-	if this.option == nil {
+	if this.GetOption() == nil {
 		return errors.New("'NetServer' option is nil")
 	}
 
 	var err error
-	switch this.option.Network {
+	switch this.GetOption().Network {
 	case "tcp":
-		this.address, err = net.ResolveTCPAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveTCPAddr(this.GetOption().Network, this.GetOption().Address)
 	case "udp":
-		this.address, err = net.ResolveUDPAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveUDPAddr(this.GetOption().Network, this.GetOption().Address)
 	case "unix":
-		this.address, err = net.ResolveUnixAddr(this.option.Network, this.option.Address)
+		this.address, err = net.ResolveUnixAddr(this.GetOption().Network, this.GetOption().Address)
 	default:
-		return errors.Errorf("unknown network '%s'", this.option.Network)
+		return errors.Errorf("unknown network '%s'", this.GetOption().Network)
 	}
 	if err != nil {
 		return err
 	}
 
-	this.codec, err = codec.NewCodec(this.option.Codec)
+	this.codec, err = codec.NewCodec(this.GetOption().Codec)
 	if err != nil {
 		return err
 	}
@@ -68,9 +69,9 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	this.mux = route.NewConnMux()
 
-	var beatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
-	if beatServer != nil {
-		this.mux.MessageHandler(beatServer.HandleHeartbeat())
+	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
+	if heartbeatServer != nil {
+		this.mux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}
 
 	this.connStore = store.New[*conn, struct{}]()
