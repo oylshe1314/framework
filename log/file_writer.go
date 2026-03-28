@@ -8,7 +8,7 @@ import (
 	frl "github.com/lestrrat-go/file-rotatelogs"
 )
 
-func newDailyWriter(svrName string, option *Option) (io.Writer, error) {
+func newDailyWriter(option *Option) (io.Writer, error) {
 	var options []frl.Option
 	if len(option.Timezone) > 0 {
 		location, err := time.LoadLocation(option.Timezone)
@@ -18,5 +18,5 @@ func newDailyWriter(svrName string, option *Option) (io.Writer, error) {
 		options = append(options, frl.WithLocation(location))
 	}
 
-	return frl.New(fmt.Sprintf("%s/%s-%%Y-%%m-%%d.log", option.Dir, svrName), options...)
+	return frl.New(fmt.Sprintf("%s/log-%%Y-%%m-%%d.log", option.Dir), options...)
 }

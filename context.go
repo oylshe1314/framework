@@ -19,13 +19,13 @@ func newFrameworkContext() *frameworkContext {
 	}
 }
 
-func ContextWithServer(ctx context.Context, server Server) context.Context {
+func ContextWithServer(ctx context.Context, name string, server Server) context.Context {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		frameworkCtx = newFrameworkContext()
 		ctx = context.WithValue(ctx, frameworkContextName, frameworkCtx)
 	}
-	frameworkCtx.servers.Put(server.Name(), server)
+	frameworkCtx.servers.Put(name, server)
 	return ctx
 }
 

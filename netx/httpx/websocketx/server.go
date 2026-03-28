@@ -35,10 +35,6 @@ func (this *WebsocketServer) SetOption(option *Option) {
 	this.option = option
 }
 
-func (this *WebsocketServer) Name() string {
-	return "websocketServer"
-}
-
 func (this *WebsocketServer) Init(ctx context.Context) error {
 	var err error
 	this.codec, err = codec.NewCodec(this.option.Codec)

@@ -80,6 +80,6 @@ func New(writer io.Writer, option *Option) (Logger, error) {
 	}
 }
 
-func NewFileWriter(svrName string, option *Option) (io.Writer, error) {
-	return newDailyWriter(svrName, option)
+func NewFileWriter(option *Option) (io.Writer, error) {
+	return newDailyWriter(option)
 }

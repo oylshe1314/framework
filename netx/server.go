@@ -34,10 +34,6 @@ func (this *NetServer) SetOption(option *Option) {
 	this.option = option
 }
 
-func (this *NetServer) Name() string {
-	return "netServer"
-}
-
 func (this *NetServer) Init(ctx context.Context) error {
 	if this.option == nil {
 		return errors.New("'NetServer' option is nil")

@@ -79,10 +79,15 @@ func start(svr Server) int {
 	return run(svr, opt)
 }
 
+type serverComponent struct {
+	name   string
+	server Server
+}
+
 func run(svr Server, opt option.Option) int {
 
 	fmt.Println("Server set option")
-	var ss, err = setOption(svr, opt)
+	var scs, err = setOption(svr, opt)
 	if err != nil {
 		fmt.Println("Server init failed, ", err)
 		return 1
@@ -99,14 +104,14 @@ func run(svr Server, opt option.Option) int {
 	}()
 
 	fmt.Println("Server initialization")
-	for _, s := range ss {
+	for _, sc := range scs {
 		time.Sleep(time.Millisecond * 100)
-		err = s.Init(ctx)
+		err = sc.server.Init(ctx)
 		if err != nil {
 			return 1
 		}
 
-		ctx = ContextWithServer(ctx, s)
+		ctx = ContextWithServer(ctx, sc.name, sc.server)
 	}
 
 	fmt.Println("Program-Hash: ", ProgramHash)
@@ -115,9 +120,9 @@ func run(svr Server, opt option.Option) int {
 	fmt.Println("Profile-Active: ", Active)
 
 	fmt.Println("Server startup")
-	for _, s := range ss {
+	for _, sc := range scs {
 		time.Sleep(time.Millisecond * 100)
-		err = s.Start()
+		err = sc.server.Start()
 		if err != nil {
 			fmt.Println("Server start failed, ", err)
 			return 1
@@ -137,9 +142,9 @@ func run(svr Server, opt option.Option) int {
 		stopped.Store(true)
 
 		// Server shutdown order: reverse of server startup
-		for i := len(ss) - 1; i >= 0; i-- {
+		for i := len(scs) - 1; i >= 0; i-- {
 			time.Sleep(time.Millisecond * 100)
-			_ = ss[i].Close()
+			_ = scs[i].server.Close()
 		}
 		cancel()
 	}()
@@ -149,21 +154,24 @@ func run(svr Server, opt option.Option) int {
 	return 0
 }
 
-func setOption(svr Server, opt option.Option) ([]Server, error) {
+func setOption(svr Server, opt option.Option) ([]*serverComponent, error) {
 	var st = reflect.TypeOf(svr)
 	if st.Kind() != reflect.Pointer || st.Elem().Kind() != reflect.Struct {
 		return nil, errors.New("server should be a struct pointer")
 	}
 
-	return reflectSetOption(opt, reflect.ValueOf(svr))
+	return reflectSetOption(st.Elem().Name(), opt, reflect.ValueOf(svr), st)
 }
 
-func reflectSetOption(opt option.Option, sv reflect.Value) ([]Server, error) {
+func reflectSetOption(name string, opt option.Option, sv reflect.Value, st reflect.Type) ([]*serverComponent, error) {
 	var err error
+	var components []*serverComponent
+
 	var sit = reflect.TypeOf((*Server)(nil)).Elem()
 
-	var ss []Server
-	var st = sv.Type()
+	st = st.Elem()
+	sv = sv.Elem()
+
 	for i := range st.NumField() {
 		var sf = st.Field(i)
 		if !sf.IsExported() {
@@ -176,12 +184,14 @@ func reflectSetOption(opt option.Option, sv reflect.Value) ([]Server, error) {
 		}
 
 		if ft.Implements(sit) {
-			var name = sf.Name
-			if strings.HasSuffix(name, "Server") {
-				name = name[:len(name)-len("Server")]
+			var tags = strings.Split(sf.Tag.Get("server"), ",")
+
+			var svrName = tags[0]
+			if svrName == "" {
+				svrName = util.LowerCamelCase(sf.Name)
 			}
 
-			var val = opt.Get(util.LowerCamelCase(name))
+			var val = opt.Get(svrName)
 			if val == nil {
 				continue
 			}
@@ -200,13 +210,13 @@ func reflectSetOption(opt option.Option, sv reflect.Value) ([]Server, error) {
 				fv = fv.Addr()
 			}
 
-			var sss []Server
-			sss, err = reflectSetOption(tmp, fv)
+			var subComponents []*serverComponent
+			subComponents, err = reflectSetOption(svrName, tmp, fv, ft)
 			if err != nil {
 				return nil, err
 			}
 
-			ss = append(ss, sss...)
+			components = append(components, subComponents...)
 		}
 	}
 
@@ -246,6 +256,10 @@ func reflectSetOption(opt option.Option, sv reflect.Value) ([]Server, error) {
 		}
 	}
 
-	ss = append(ss, sv.Interface().(Server))
-	return ss, nil
+	for st.Kind() == reflect.Pointer {
+		st = st.Elem()
+	}
+
+	components = append(components, &serverComponent{name: name, server: sv.Interface().(Server)})
+	return components, nil
 }

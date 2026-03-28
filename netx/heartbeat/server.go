@@ -27,10 +27,6 @@ func (this *HeartbeatServer) SetOption(option *Option) {
 	this.option = option
 }
 
-func (this *HeartbeatServer) Name() string {
-	return "heartbeatServer"
-}
-
 func (this *HeartbeatServer) Init(ctx context.Context) error {
 	if this.option == nil {
 		return errors.New("'HeartbeatServer' option is nil")

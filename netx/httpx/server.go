@@ -29,10 +29,6 @@ func (this *HttpServer) SetOption(option *Option) {
 	this.option = option
 }
 
-func (this *HttpServer) Name() string {
-	return "httpServer"
-}
-
 func (this *HttpServer) Init(ctx context.Context) error {
 	if this.option == nil {
 		return errors.New("'HttpServer' option is nil")
