@@ -23,8 +23,8 @@ type HeartbeatServer struct {
 	heartbeatHandler transport.MessageHandler
 }
 
-func (server *HeartbeatServer) SetOption(option *Option) {
-	server.option = option
+func (this *HeartbeatServer) SetOption(option *Option) {
+	this.option = option
 }
 
 func (this *HeartbeatServer) Name() string {

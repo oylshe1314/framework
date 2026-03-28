@@ -32,7 +32,6 @@ type WebsocketServer struct {
 }
 
 func (this *WebsocketServer) SetOption(option *Option) {
-	this.HttpServer.SetOption(&option.Option)
 	this.option = option
 }
 
@@ -41,11 +40,7 @@ func (this *WebsocketServer) Name() string {
 }
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
-	var err = this.HttpServer.Init(ctx)
-	if err != nil {
-		return err
-	}
-
+	var err error
 	this.codec, err = codec.NewCodec(this.option.Codec)
 	if err != nil {
 		return err
