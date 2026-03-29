@@ -31,10 +31,6 @@ type NetServer struct {
 	connStore store.Store[*conn, struct{}]
 }
 
-//func (this *NetServer) SetOption(option *Option) {
-//	this.option = option
-//}
-
 func (this *NetServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
 		return errors.New("'NetServer' option is nil")
@@ -60,7 +56,12 @@ func (this *NetServer) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, "loggerServer")
+	var loggerServerName = this.GetOption().Components.Logger
+	if loggerServerName == "" {
+		loggerServerName = "loggerServer"
+	}
+
+	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
@@ -69,7 +70,12 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	this.mux = route.NewConnMux()
 
-	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
+	var heartbeatServerName = this.GetOption().Components.Heartbeat
+	if heartbeatServerName != "" {
+		heartbeatServerName = "heartbeatServer"
+	}
+
+	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName)
 	if heartbeatServer != nil {
 		this.mux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}

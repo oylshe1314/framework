@@ -44,7 +44,12 @@ func (this *WebsocketServer) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, "loggerServer")
+	var loggerServerName = this.GetOption().Components.Logger
+	if loggerServerName == "" {
+		loggerServerName = "loggerServer"
+	}
+
+	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
@@ -56,9 +61,14 @@ func (this *WebsocketServer) Init(ctx context.Context) error {
 		CheckOrigin: this.checkOrigin,
 	}
 
-	var beatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, "heartbeatServer")
-	if beatServer != nil {
-		this.mux.MessageHandler(beatServer.HandleHeartbeat())
+	var heartbeatServerName = this.GetOption().Components.Heartbeat
+	if heartbeatServerName != "" {
+		heartbeatServerName = "heartbeatServer"
+	}
+
+	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName)
+	if heartbeatServer != nil {
+		this.mux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}
 
 	this.connStore = store.New[*conn, struct{}]()

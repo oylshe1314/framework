@@ -2,6 +2,7 @@ package framework
 
 import (
 	"context"
+	"framework/server"
 	"framework/store"
 )
 
@@ -9,17 +10,17 @@ const frameworkContextName = "frameworkContext"
 
 type frameworkContext struct {
 	values  store.Store[any, any]
-	servers store.Store[string, Server]
+	servers store.Store[string, server.Server]
 }
 
 func newFrameworkContext() *frameworkContext {
 	return &frameworkContext{
 		values:  store.NewConcurrent[any, any](),
-		servers: store.NewConcurrent[string, Server](),
+		servers: store.NewConcurrent[string, server.Server](),
 	}
 }
 
-func ContextWithServer(ctx context.Context, name string, server Server) context.Context {
+func ContextWithServer(ctx context.Context, name string, server server.Server) context.Context {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		frameworkCtx = newFrameworkContext()
@@ -29,7 +30,7 @@ func ContextWithServer(ctx context.Context, name string, server Server) context.
 	return ctx
 }
 
-func ServerFromContext[T Server](ctx context.Context, name string) (t T) {
+func ServerFromContext[T server.Server](ctx context.Context, name string) (t T) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return

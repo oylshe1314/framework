@@ -46,7 +46,12 @@ func (this *HttpServer) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, "loggerServer")
+	var loggerServerName = this.GetOption().Components.Logger
+	if loggerServerName == "" {
+		loggerServerName = "loggerServer"
+	}
+
+	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
