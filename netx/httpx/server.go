@@ -5,6 +5,7 @@ import (
 	"framework"
 	"framework/errors"
 	"framework/log"
+	"framework/netx/route"
 	"framework/option"
 	"net"
 	"net/http"
@@ -22,7 +23,8 @@ type HttpServer struct {
 	address  net.Addr
 	listener net.Listener
 
-	ginEngine  *gin.Engine
+	httpMux *route.HttpMux
+
 	httpServer *http.Server
 }
 
@@ -58,23 +60,14 @@ func (this *HttpServer) Init(ctx context.Context) error {
 		this.logger = log.NewNoneLogger()
 	}
 
-	this.ginEngine = gin.New()
-	this.httpServer = &http.Server{
-		Handler: this.ginEngine.Handler(),
-	}
-
-	if this.GetOption().BasePath == "" {
-		this.GetOption().BasePath = "/"
-	}
-
-	if this.GetOption().BasePath != "/" {
-		this.IRouter = this.ginEngine.Group(this.GetOption().BasePath)
-	} else {
-		this.IRouter = this.ginEngine
-	}
+	this.httpMux = route.NewHttpMux()
 
 	if this.GetOption().HtmlPath != "" {
-		this.ginEngine.LoadHTMLGlob(this.GetOption().HtmlPath)
+		this.httpMux.LoadHTMLGlob(this.GetOption().HtmlPath)
+	}
+
+	this.httpServer = &http.Server{
+		Handler: this.httpMux.Handler(),
 	}
 
 	return nil

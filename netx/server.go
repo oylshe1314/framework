@@ -26,7 +26,7 @@ type NetServer struct {
 	address  net.Addr
 	listener net.Listener
 
-	mux *route.ConnMux
+	connMux *route.ConnMux
 
 	connStore store.Store[*conn, struct{}]
 }
@@ -68,7 +68,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 		this.logger = log.NewNoneLogger()
 	}
 
-	this.mux = route.NewConnMux()
+	this.connMux = route.NewConnMux()
 
 	var heartbeatServerName = this.GetOption().Components.Heartbeat
 	if heartbeatServerName != "" {
@@ -77,7 +77,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName)
 	if heartbeatServer != nil {
-		this.mux.MessageHandler(heartbeatServer.HandleHeartbeat())
+		this.connMux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}
 
 	this.connStore = store.New[*conn, struct{}]()
@@ -122,12 +122,12 @@ func (this *NetServer) serve() error {
 		this.connStore.Put(cc, struct{}{})
 		go func() {
 			defer func() {
-				this.mux.HandleDisconnect(cc)
+				this.connMux.HandleDisconnect(cc)
 				this.connStore.Remove(cc)
 			}()
 
-			this.mux.HandleConnect(cc)
-			_ = cc.Serve(transport.MessageHandlerFunc(this.mux.HandleMessage))
+			this.connMux.HandleConnect(cc)
+			_ = cc.Serve(transport.MessageHandlerFunc(this.connMux.HandleMessage))
 		}()
 	}
 }
@@ -144,17 +144,17 @@ func (this *NetServer) Close() error {
 }
 
 func (this *NetServer) ConnectHandler(handler func(transport.Conn)) {
-	this.mux.ConnectHandler(handler)
+	this.connMux.ConnectHandler(handler)
 }
 
 func (this *NetServer) DisconnectHandler(handler func(transport.Conn)) {
-	this.mux.DisconnectHandler(handler)
+	this.connMux.DisconnectHandler(handler)
 }
 
 func (this *NetServer) DefaultHandler(handler transport.MessageHandlerFunc) {
-	this.mux.DefaultHandler(handler)
+	this.connMux.DefaultHandler(handler)
 }
 
 func (this *NetServer) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandlerFunc) {
-	this.mux.MessageHandler(modId, msgId, handler)
+	this.connMux.MessageHandler(modId, msgId, handler)
 }
