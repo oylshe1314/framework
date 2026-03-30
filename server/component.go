@@ -1,13 +1,18 @@
 package server
 
-type Component interface {
+type Component[T Server] interface {
 	Name() string
-	Server() Server
+	Server() T
 }
 
-type ComponentsOption struct {
-	Logger    string `json:"logger"`
-	Heartbeat string `json:"heartbeat"`
+type Components map[string]string
+
+func (cs Components) Get(name string) string {
+	c, ok := cs[name]
+	if !ok {
+		return ""
+	}
+	return c
 }
 
 type serverComponent struct {
@@ -15,7 +20,7 @@ type serverComponent struct {
 	server Server
 }
 
-func NewServerComponent(name string, server Server) Component {
+func NewServerComponent(name string, server Server) Component[Server] {
 	return &serverComponent{
 		name:   name,
 		server: server,

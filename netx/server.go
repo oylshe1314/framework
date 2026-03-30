@@ -56,12 +56,12 @@ func (this *NetServer) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServerName = this.GetOption().Components.Logger
+	var loggerServerName = this.GetOption().Components.Get("loggerServer")
 	if loggerServerName == "" {
 		loggerServerName = "loggerServer"
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
+	var loggerServer = framework.ComponentFromContext[*log.LoggerServer](ctx, loggerServerName).Server()
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
@@ -70,12 +70,12 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	this.connMux = route.NewConnMux()
 
-	var heartbeatServerName = this.GetOption().Components.Heartbeat
+	var heartbeatServerName = this.GetOption().Components.Get("heartbeatServer")
 	if heartbeatServerName != "" {
-		heartbeatServerName = "heartbeatServer"
+		heartbeatServerName = "heartbeat"
 	}
 
-	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName)
+	var heartbeatServer = framework.ComponentFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName).Server()
 	if heartbeatServer != nil {
 		this.connMux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}
@@ -151,10 +151,10 @@ func (this *NetServer) DisconnectHandler(handler func(transport.Conn)) {
 	this.connMux.DisconnectHandler(handler)
 }
 
-func (this *NetServer) DefaultHandler(handler transport.MessageHandlerFunc) {
+func (this *NetServer) DefaultHandler(handler transport.MessageHandler) {
 	this.connMux.DefaultHandler(handler)
 }
 
-func (this *NetServer) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandlerFunc) {
+func (this *NetServer) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandler) {
 	this.connMux.MessageHandler(modId, msgId, handler)
 }

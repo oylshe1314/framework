@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-func SetOption(svr Server, opt option.Option) ([]Component, error) {
+func SetOption(svr Server, opt option.Option) ([]Component[Server], error) {
 	return serverOption(opt).setOption(svr)
 }
 
 type serverOption option.Option
 
-func (opt serverOption) setOption(svr Server) ([]Component, error) {
+func (opt serverOption) setOption(svr Server) ([]Component[Server], error) {
 	var st = reflect.TypeOf(svr)
 	if st.Kind() != reflect.Pointer || st.Elem().Kind() != reflect.Struct {
 		return nil, errors.New("server should be a struct pointer")
@@ -24,9 +24,9 @@ func (opt serverOption) setOption(svr Server) ([]Component, error) {
 	return opt.reflectSetOption(st.Elem().Name(), reflect.ValueOf(svr), st)
 }
 
-func (opt serverOption) reflectSetOption(name string, sv reflect.Value, st reflect.Type) ([]Component, error) {
+func (opt serverOption) reflectSetOption(name string, sv reflect.Value, st reflect.Type) ([]Component[Server], error) {
 	var err error
-	var components []Component
+	var components []Component[Server]
 
 	var sit = reflect.TypeOf((*Server)(nil)).Elem()
 
@@ -71,7 +71,7 @@ func (opt serverOption) reflectSetOption(name string, sv reflect.Value, st refle
 				fv = fv.Addr()
 			}
 
-			var subComponents []Component
+			var subComponents []Component[Server]
 			subComponents, err = (serverOption(tmp)).reflectSetOption(svrName, fv, ft)
 			if err != nil {
 				return nil, err

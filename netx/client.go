@@ -50,7 +50,12 @@ func (this *NetClient) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, "loggerServer")
+	var loggerServerName = this.GetOption().Components.Get("loggerServer")
+	if loggerServerName == "" {
+		loggerServerName = "loggerServer"
+	}
+
+	var loggerServer = framework.ComponentFromContext[*log.LoggerServer](ctx, loggerServerName).Server()
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
@@ -63,6 +68,7 @@ func (this *NetClient) Init(ctx context.Context) error {
 
 func (this *NetClient) Close() error {
 	if this.conn != nil {
+		this.mux.HandleDisconnect(this.conn)
 		return this.conn.Close()
 	}
 	return nil
@@ -74,6 +80,7 @@ func (this *NetClient) Dial() error {
 		return err
 	}
 	this.conn = newConn(c, this.logger, this.codec)
+	this.mux.HandleConnect(this.conn)
 	return nil
 }
 
@@ -101,10 +108,10 @@ func (this *NetClient) DisconnectHandler(handler func(transport.Conn)) {
 	this.mux.DisconnectHandler(handler)
 }
 
-func (this *NetClient) DefaultHandler(handler transport.MessageHandlerFunc) {
+func (this *NetClient) DefaultHandler(handler transport.MessageHandler) {
 	this.mux.DefaultHandler(handler)
 }
 
-func (this *NetClient) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandlerFunc) {
+func (this *NetClient) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandler) {
 	this.mux.MessageHandler(modId, msgId, handler)
 }

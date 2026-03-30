@@ -41,12 +41,12 @@ func (this *WebsocketServer) Init(ctx context.Context) error {
 		return err
 	}
 
-	var loggerServerName = this.GetOption().Components.Logger
+	var loggerServerName = this.GetOption().Components.Get("loggerServer")
 	if loggerServerName == "" {
 		loggerServerName = "loggerServer"
 	}
 
-	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
+	var loggerServer = framework.ComponentFromContext[*log.LoggerServer](ctx, loggerServerName).Server()
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {

@@ -8,8 +8,8 @@ import (
 type ConnRegistry interface {
 	ConnectHandler(func(transport.Conn))
 	DisconnectHandler(func(transport.Conn))
-	DefaultHandler(transport.MessageHandlerFunc)
-	MessageHandler(uint16, uint16, transport.MessageHandlerFunc)
+	DefaultHandler(transport.MessageHandler)
+	MessageHandler(uint16, uint16, transport.MessageHandler)
 }
 
 type ConnHandler interface {
@@ -37,11 +37,11 @@ func (this *ConnMux) DisconnectHandler(handler func(transport.Conn)) {
 	this.disconnectHandler = handler
 }
 
-func (this *ConnMux) DefaultHandler(handler transport.MessageHandlerFunc) {
+func (this *ConnMux) DefaultHandler(handler transport.MessageHandler) {
 	this.defaultHandler = handler
 }
 
-func (this *ConnMux) MessageHandler(modId, msgId uint16, handler transport.MessageHandlerFunc) {
+func (this *ConnMux) MessageHandler(modId, msgId uint16, handler transport.MessageHandler) {
 	this.messageHandler[util.Compose2Uint16(modId, msgId)] = handler
 }
 

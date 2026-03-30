@@ -109,17 +109,17 @@ func (this *HeartbeatServer) Remove(conn transport.Conn) {
 	delete(this.slots[slot.(int)], conn)
 }
 
-func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandlerFunc) {
+func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandler) {
 	this.heartbeatHandler = handler
 }
 
-func (this *HeartbeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandlerFunc) {
-	return this.GetOption().ModId, this.GetOption().MsgId, func(conn transport.Conn, msg transport.Message) {
+func (this *HeartbeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandler) {
+	return this.GetOption().ModId, this.GetOption().MsgId, transport.MessageHandlerFunc(func(conn transport.Conn, msg transport.Message) {
 		this.Add(conn)
 		if this.heartbeatHandler != nil {
 			this.heartbeatHandler.Handle(conn, msg)
 		} else {
 			_ = msg.Reply(nil)
 		}
-	}
+	})
 }

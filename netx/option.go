@@ -8,5 +8,5 @@ type Option struct {
 
 	Codec string `json:"codec"`
 
-	Components server.ComponentsOption `json:"components"`
+	Components server.Components `json:"components"`
 }

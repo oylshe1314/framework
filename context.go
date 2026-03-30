@@ -10,36 +10,36 @@ const frameworkContextName = "frameworkContext"
 
 type frameworkContext struct {
 	values  store.Store[any, any]
-	servers store.Store[string, server.Server]
+	servers store.Store[string, server.Component[server.Server]]
 }
 
 func newFrameworkContext() *frameworkContext {
 	return &frameworkContext{
 		values:  store.NewConcurrent[any, any](),
-		servers: store.NewConcurrent[string, server.Server](),
+		servers: store.NewConcurrent[string, server.Component[server.Server]](),
 	}
 }
 
-func ContextWithServer(ctx context.Context, name string, server server.Server) context.Context {
+func ContextWithComponent(ctx context.Context, component server.Component[server.Server]) context.Context {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		frameworkCtx = newFrameworkContext()
 		ctx = context.WithValue(ctx, frameworkContextName, frameworkCtx)
 	}
-	frameworkCtx.servers.Put(name, server)
+	frameworkCtx.servers.Put(component.Name(), component)
 	return ctx
 }
 
-func ServerFromContext[T server.Server](ctx context.Context, name string) (t T) {
+func ComponentFromContext[T server.Server](ctx context.Context, name string) (c server.Component[T]) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return
 	}
-	s, ok := frameworkCtx.values.Get(name)
+	v, ok := frameworkCtx.values.Get(name)
 	if !ok {
 		return
 	}
-	return s.(T)
+	return v.(server.Component[T])
 }
 
 func ContextWithValue[Key comparable, Value any](ctx context.Context, k Key, v Value) context.Context {
