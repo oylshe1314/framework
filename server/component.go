@@ -5,9 +5,9 @@ type Component[T Server] interface {
 	Server() T
 }
 
-type Components map[string]string
+type ComponentsOption map[string]string
 
-func (cs Components) Get(name string) string {
+func (cs ComponentsOption) Get(name string) string {
 	c, ok := cs[name]
 	if !ok {
 		return ""
