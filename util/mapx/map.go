@@ -1,6 +1,6 @@
-package util
+package mapx
 
-func MapKeys[K comparable, V any](m map[K]V) []K {
+func Keys[K comparable, V any](m map[K]V) []K {
 	if len(m) == 0 {
 		return nil
 	}
@@ -14,7 +14,7 @@ func MapKeys[K comparable, V any](m map[K]V) []K {
 	return keys
 }
 
-func MapValues[K comparable, V any](m map[K]V) []V {
+func Values[K comparable, V any](m map[K]V) []V {
 	if len(m) == 0 {
 		return nil
 	}
@@ -28,7 +28,7 @@ func MapValues[K comparable, V any](m map[K]V) []V {
 	return values
 }
 
-func MapFindValue[K comparable, V any](m map[K]V, vCmp func(V) bool) (rv V) {
+func FindValue[K comparable, V any](m map[K]V, vCmp func(V) bool) (rv V) {
 	for _, v := range m {
 		if vCmp(v) {
 			rv = v
