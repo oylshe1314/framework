@@ -13,7 +13,7 @@ import (
 )
 
 type NetClient struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	codec  codec.Codec
 	logger log.Logger

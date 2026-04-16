@@ -7,7 +7,7 @@ import (
 )
 
 type LoggerServer struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	logger Logger
 }

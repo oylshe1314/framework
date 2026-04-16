@@ -16,7 +16,7 @@ import (
 )
 
 type NetServer struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	closed bool
 
@@ -32,6 +32,9 @@ type NetServer struct {
 }
 
 func (this *NetServer) Init(ctx context.Context) error {
+	if this.GetOption() == nil {
+		return errors.New("'NetServer' option is nil")
+	}
 
 	var err error
 	switch this.GetOption().Network {

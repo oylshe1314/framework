@@ -16,7 +16,7 @@ import (
 type HttpServer struct {
 	gin.IRouter
 
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	logger log.Logger
 

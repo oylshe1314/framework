@@ -13,7 +13,7 @@ import (
 )
 
 type SshClient struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	c *ssh.Client
 }

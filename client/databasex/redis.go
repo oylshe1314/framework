@@ -10,5 +10,5 @@ type RedisOption struct {
 }
 
 type RedisClient struct {
-	option.Optional[*RedisOption]
+	option.Optional[RedisOption]
 }

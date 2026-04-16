@@ -20,7 +20,7 @@ import (
 type WebsocketServer struct {
 	httpx.HttpServer
 
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	codec  codec.Codec
 	logger log.Logger
@@ -32,7 +32,7 @@ type WebsocketServer struct {
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'NetServer' option is nil")
+		return errors.New("'WebsocketServer' option is nil")
 	}
 
 	var err error
