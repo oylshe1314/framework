@@ -72,7 +72,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 
 	var heartbeatServerName = this.GetOption().Components.Get("heartbeatServer")
 	if heartbeatServerName != "" {
-		heartbeatServerName = "heartbeat"
+		heartbeatServerName = "heartbeatServer"
 	}
 
 	var heartbeatServer = framework.ComponentFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName).Server()

@@ -9,13 +9,9 @@ import (
 	"framework/option"
 	"net"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {
-	gin.IRouter
-
 	option.Optional[*Option]
 
 	logger log.Logger
