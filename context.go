@@ -35,11 +35,33 @@ func ComponentFromContext[T server.Server](ctx context.Context, name string) (c 
 	if !ok {
 		return
 	}
-	v, ok := frameworkCtx.values.Get(name)
+	v, ok := frameworkCtx.servers.Get(name)
 	if !ok {
 		return
 	}
-	return v.(server.Component[T])
+
+	s, ok := v.Server().(T)
+	if !ok {
+		return
+	}
+
+	return server.NewServerComponent(v.Name(), s)
+}
+
+func ComponentsFromContext[T server.Server](ctx context.Context) (cs []server.Component[T]) {
+	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
+	if !ok {
+		return
+	}
+
+	frameworkCtx.servers.Foreach(func(name string, c server.Component[server.Server]) {
+		var s T
+		s, ok = c.Server().(T)
+		if ok {
+			cs = append(cs, server.NewServerComponent(c.Name(), s))
+		}
+	})
+	return
 }
 
 func ContextWithValue[Key comparable, Value any](ctx context.Context, k Key, v Value) context.Context {

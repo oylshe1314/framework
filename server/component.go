@@ -15,22 +15,22 @@ func (cs ComponentsOption) Get(name string) string {
 	return c
 }
 
-type serverComponent struct {
+type serverComponent[T Server] struct {
 	name   string
-	server Server
+	server T
 }
 
-func NewServerComponent(name string, server Server) Component[Server] {
-	return &serverComponent{
+func NewServerComponent[T Server](name string, server T) Component[T] {
+	return &serverComponent[T]{
 		name:   name,
 		server: server,
 	}
 }
 
-func (this *serverComponent) Name() string {
+func (this *serverComponent[T]) Name() string {
 	return this.name
 }
 
-func (this *serverComponent) Server() Server {
+func (this *serverComponent[T]) Server() T {
 	return this.server
 }
