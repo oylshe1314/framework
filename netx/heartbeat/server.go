@@ -11,7 +11,7 @@ import (
 )
 
 type HeartbeatServer struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	closed bool
 

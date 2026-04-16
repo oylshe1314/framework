@@ -16,7 +16,7 @@ import (
 )
 
 type NetServer struct {
-	option.Optional[*Option]
+	option.Optional[Option]
 
 	closed bool
 
@@ -61,7 +61,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 		loggerServerName = "loggerServer"
 	}
 
-	var loggerServer = framework.ComponentFromContext[*log.LoggerServer](ctx, loggerServerName).Server()
+	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {
@@ -75,7 +75,7 @@ func (this *NetServer) Init(ctx context.Context) error {
 		heartbeatServerName = "heartbeatServer"
 	}
 
-	var heartbeatServer = framework.ComponentFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName).Server()
+	var heartbeatServer = framework.ServerFromContext[*heartbeat.HeartbeatServer](ctx, heartbeatServerName)
 	if heartbeatServer != nil {
 		this.connMux.MessageHandler(heartbeatServer.HandleHeartbeat())
 	}

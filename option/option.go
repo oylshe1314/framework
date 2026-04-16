@@ -8,14 +8,14 @@ import (
 )
 
 type Optional[Opt any] struct {
-	opt Opt
+	opt *Opt
 }
 
-func (this *Optional[Opt]) SetOption(opt Opt) {
+func (this *Optional[Opt]) SetOption(opt *Opt) {
 	this.opt = opt
 }
 
-func (this *Optional[Opt]) GetOption() Opt {
+func (this *Optional[Opt]) GetOption() *Opt {
 	return this.opt
 }
 

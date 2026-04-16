@@ -11,7 +11,7 @@ var (
 	//go:embed version
 	frameworkVersion string
 
-	programVersion string = "1.0.0"
+	programVersion string = "0.0.0"
 )
 
 func FrameworkVersion() string {
