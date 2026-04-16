@@ -107,7 +107,7 @@ func run(svr server.Server, opt option.Option) int {
 			return 1
 		}
 
-		ctx = ContextWithComponent(ctx, component.Name(), component.Server())
+		ctx = ContextWithServer(ctx, component.Name(), component.Server())
 	}
 
 	fmt.Println("Program-Hash: ", ProgramHash)

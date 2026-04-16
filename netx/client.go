@@ -55,7 +55,7 @@ func (this *NetClient) Init(ctx context.Context) error {
 		loggerServerName = "loggerServer"
 	}
 
-	var loggerServer = framework.ComponentFromContext[*log.LoggerServer](ctx, loggerServerName).Server()
+	var loggerServer = framework.ServerFromContext[*log.LoggerServer](ctx, loggerServerName)
 	if loggerServer != nil {
 		this.logger = loggerServer.Logger()
 	} else {

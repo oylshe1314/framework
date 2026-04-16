@@ -27,7 +27,10 @@ func (this *serverComponent[T]) Server() T {
 
 type ComponentsOption map[string]string
 
-func (cso ComponentsOption) Get(name string) (string, bool) {
-	c, ok := cso[name]
-	return c, ok
+func (cso ComponentsOption) Get(component string) string {
+	c, ok := cso[component]
+	if !ok {
+		return ""
+	}
+	return c
 }
