@@ -6,31 +6,31 @@ import (
 	"framework/store"
 )
 
-const frameworkContextName = "frameworkContext"
+const frameworkContextName = "_frameworkContext"
 
 type frameworkContext struct {
 	values  store.Store[any, any]
-	servers store.Store[string, server.Component[server.Server]]
+	servers store.Store[string, server.Server]
 }
 
 func newFrameworkContext() *frameworkContext {
 	return &frameworkContext{
 		values:  store.NewConcurrent[any, any](),
-		servers: store.NewConcurrent[string, server.Component[server.Server]](),
+		servers: store.NewConcurrent[string, server.Server](),
 	}
 }
 
-func ContextWithComponent(ctx context.Context, component server.Component[server.Server]) context.Context {
+func ContextWithComponent(ctx context.Context, name string, svr server.Server) context.Context {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		frameworkCtx = newFrameworkContext()
 		ctx = context.WithValue(ctx, frameworkContextName, frameworkCtx)
 	}
-	frameworkCtx.servers.Put(component.Name(), component)
+	frameworkCtx.servers.Put(name, svr)
 	return ctx
 }
 
-func ComponentFromContext[T server.Server](ctx context.Context, name string) (c server.Component[T]) {
+func ServerFromContext[T server.Server](ctx context.Context, name string) (s T) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return
@@ -40,25 +40,25 @@ func ComponentFromContext[T server.Server](ctx context.Context, name string) (c 
 		return
 	}
 
-	s, ok := v.Server().(T)
+	s, ok = v.(T)
 	if !ok {
 		return
 	}
 
-	return server.NewServerComponent(v.Name(), s)
+	return s
 }
 
-func ComponentsFromContext[T server.Server](ctx context.Context) (cs []server.Component[T]) {
+func ServersFromContext[T server.Server](ctx context.Context) (ss []T) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return
 	}
 
-	frameworkCtx.servers.Foreach(func(name string, c server.Component[server.Server]) {
+	frameworkCtx.servers.Foreach(func(name string, svr server.Server) {
 		var s T
-		s, ok = c.Server().(T)
+		s, ok = svr.(T)
 		if ok {
-			cs = append(cs, server.NewServerComponent(c.Name(), s))
+			ss = append(ss, s)
 		}
 	})
 	return
