@@ -1,6 +1,7 @@
 package srd
 
 type Node struct {
+	Type string `json:"type"`
 	Name string `json:"name"`
 	Guid string `json:"guid"`
 
@@ -19,8 +20,8 @@ type NetNode struct {
 type HttpNode struct {
 	NetNode `json:",inline"`
 
-	Secure   bool   `json:"secure"`
 	BasePath string `json:"basePath"`
+	Secure   bool   `json:"secure"`
 }
 
 type WebsocketNode struct {
