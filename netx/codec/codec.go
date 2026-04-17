@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"framework/errors"
+	"github.com/oylshe1314/framework/errors"
 )
 
 type Codec interface {

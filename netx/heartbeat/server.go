@@ -2,9 +2,9 @@ package heartbeat
 
 import (
 	"context"
-	"framework/errors"
-	"framework/netx/transport"
-	"framework/option"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/option"
 	"sync"
 	"sync/atomic"
 	"time"

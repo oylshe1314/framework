@@ -3,11 +3,12 @@ package sshx
 import (
 	"bytes"
 	"context"
-	"framework/errors"
-	"framework/option"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/option"
 
 	"golang.org/x/crypto/ssh"
 )

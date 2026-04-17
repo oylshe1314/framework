@@ -2,11 +2,11 @@ package httpx
 
 import (
 	"context"
-	"framework"
-	"framework/errors"
-	"framework/log"
-	"framework/netx/route"
-	"framework/option"
+	"github.com/oylshe1314/framework"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/netx/route"
+	"github.com/oylshe1314/framework/option"
 	"net"
 	"net/http"
 

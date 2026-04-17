@@ -1,6 +1,6 @@
 package databasex
 
-import "framework/option"
+import "github.com/oylshe1314/framework/option"
 
 type RedisOption struct {
 	Addresses []string `json:"addresses"`

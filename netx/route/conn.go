@@ -1,8 +1,8 @@
 package route
 
 import (
-	"framework/netx/transport"
-	"framework/util"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/util"
 )
 
 type ConnRegistry interface {

@@ -1,6 +1,6 @@
 package netx
 
-import "framework/server"
+import "github.com/oylshe1314/framework/server"
 
 type Option struct {
 	Network string `json:"network"`

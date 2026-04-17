@@ -1,6 +1,6 @@
 package zk
 
-import "framework/log"
+import "github.com/oylshe1314/framework/log"
 
 type logger struct {
 	log.Logger

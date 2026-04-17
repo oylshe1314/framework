@@ -2,9 +2,9 @@ package sshx
 
 import (
 	"context"
-	"framework/errors"
 	"io"
 
+	"github.com/oylshe1314/framework/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -23,9 +23,9 @@ func (this *ShellClient) Init(ctx context.Context) error {
 		return errors.Error("failed to create session: ", err)
 	}
 
-	s.Stdin = this.in
-	s.Stdout = this.out
-	s.Stderr = this.errOut
+	this.s.Stdin = this.in
+	this.s.Stdout = this.out
+	this.s.Stderr = this.errOut
 
 	this.s = s
 	return nil
@@ -45,15 +45,19 @@ func (this *ShellClient) work() error {
 		ssh.TTY_OP_OSPEED: 14400,
 	}
 
-	if err := this.s.RequestPty("xterm", 80, 40, modes); err != nil {
-		return errors.Error("request for pseudo terminal failed: ", err)
+	var err error
+	err = this.s.RequestPty("xterm-256color", 640, 400, modes)
+	if err != nil {
+		return err
 	}
 
-	if err := this.s.Shell(); err != nil {
+	err = this.s.Shell()
+	if err != nil {
 		return errors.Error("failed to start shell: ", err)
 	}
 
-	if err := this.s.Wait(); err != nil {
+	err = this.s.Wait()
+	if err != nil {
 		return errors.Error("session ended with error: ", err)
 	}
 

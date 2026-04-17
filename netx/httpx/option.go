@@ -1,6 +1,6 @@
 package httpx
 
-import "framework/netx"
+import "github.com/oylshe1314/framework/netx"
 
 type Option struct {
 	netx.Option

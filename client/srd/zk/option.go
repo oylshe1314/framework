@@ -1,7 +1,7 @@
 package zk
 
 import (
-	"framework/server"
+	"github.com/oylshe1314/framework/server"
 	"time"
 )
 

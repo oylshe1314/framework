@@ -2,13 +2,13 @@ package netx
 
 import (
 	"context"
-	"framework"
-	"framework/errors"
-	"framework/log"
-	"framework/netx/codec"
-	"framework/netx/route"
-	"framework/netx/transport"
-	"framework/option"
+	"github.com/oylshe1314/framework"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/netx/codec"
+	"github.com/oylshe1314/framework/netx/route"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/option"
 	"net"
 )
 

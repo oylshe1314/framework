@@ -1,6 +1,6 @@
-module framework
+module github.com/oylshe1314/framework
 
-go 1.26
+go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.12.0
@@ -12,6 +12,7 @@ require (
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/rs/zerolog v1.35.0
 	golang.org/x/crypto v0.50.0
+	golang.org/x/term v0.42.0
 	google.golang.org/protobuf v1.36.11
 )
 

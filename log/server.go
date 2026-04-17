@@ -2,8 +2,8 @@ package log
 
 import (
 	"context"
-	"framework/errors"
-	"framework/option"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/option"
 )
 
 type LoggerServer struct {

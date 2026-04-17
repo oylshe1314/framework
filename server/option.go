@@ -1,10 +1,10 @@
 package server
 
 import (
-	"framework/errors"
-	"framework/option"
-	"framework/util"
-	"framework/util/jsonx"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/option"
+	"github.com/oylshe1314/framework/util"
+	"github.com/oylshe1314/framework/util/jsonx"
 	"reflect"
 	"strings"
 )

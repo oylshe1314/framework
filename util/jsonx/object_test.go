@@ -2,7 +2,7 @@ package jsonx
 
 import (
 	"encoding/json"
-	"framework/util"
+	"github.com/oylshe1314/framework/util"
 	"testing"
 )
 

@@ -2,8 +2,8 @@ package jsonx
 
 import (
 	"fmt"
-	"framework/errors"
-	"framework/util"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/util"
 	"reflect"
 	"strconv"
 	"strings"

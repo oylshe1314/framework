@@ -2,8 +2,9 @@ package framework
 
 import (
 	"context"
-	"framework/server"
-	"framework/store"
+
+	"github.com/oylshe1314/framework/server"
+	"github.com/oylshe1314/framework/store"
 )
 
 const frameworkContextName = "_frameworkContext"
