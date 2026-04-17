@@ -21,7 +21,7 @@ func newFrameworkContext() *frameworkContext {
 	}
 }
 
-func ContextWithComponent(ctx context.Context, name string, svr server.Server) context.Context {
+func ContextWithServer(ctx context.Context, name string, svr server.Server) context.Context {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		frameworkCtx = newFrameworkContext()

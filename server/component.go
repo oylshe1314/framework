@@ -5,16 +5,6 @@ type Component[T Server] interface {
 	Server() T
 }
 
-type ComponentsOption map[string]string
-
-func (cs ComponentsOption) Get(name string) string {
-	c, ok := cs[name]
-	if !ok {
-		return ""
-	}
-	return c
-}
-
 type serverComponent[T Server] struct {
 	name   string
 	server T
@@ -33,4 +23,14 @@ func (this *serverComponent[T]) Name() string {
 
 func (this *serverComponent[T]) Server() T {
 	return this.server
+}
+
+type ComponentsOption map[string]string
+
+func (cso ComponentsOption) Get(component string) string {
+	c, ok := cso[component]
+	if !ok {
+		return ""
+	}
+	return c
 }
