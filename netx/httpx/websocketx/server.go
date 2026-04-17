@@ -2,6 +2,8 @@ package websocketx
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
@@ -11,7 +13,6 @@ import (
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
 	"github.com/oylshe1314/framework/store"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -112,5 +113,5 @@ func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.H
 }
 
 func (this *WebsocketServer) HandleUpgrade(pattern string, handler route.ConnHandler) {
-	this.Any(pattern, this.upgradeHandlerFunc(handler))
+	this.Handle(pattern, this.upgradeHandlerFunc(handler))
 }

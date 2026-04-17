@@ -2,9 +2,10 @@ package option
 
 import (
 	"fmt"
-	"github.com/oylshe1314/framework/store"
 	"sort"
 	"strings"
+
+	"github.com/oylshe1314/framework/store"
 )
 
 type Optional[Opt any] struct {

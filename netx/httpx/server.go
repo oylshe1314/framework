@@ -2,20 +2,18 @@ package httpx
 
 import (
 	"context"
+	"net"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/netx/route"
 	"github.com/oylshe1314/framework/option"
-	"net"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {
-	gin.IRouter
-
 	option.Optional[Option]
 
 	logger log.Logger
@@ -96,4 +94,36 @@ func (this *HttpServer) serve() error {
 
 func (this *HttpServer) Close() error {
 	return this.httpServer.Close()
+}
+
+func (this *HttpServer) Handle(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Any(pattern, handler)
+}
+
+func (this *HttpServer) HandleGet(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("GET", pattern, handler)
+}
+
+func (this *HttpServer) HandlePost(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("POST", pattern, handler)
+}
+
+func (this *HttpServer) HandlePut(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("PUT", pattern, handler)
+}
+
+func (this *HttpServer) HandleDelete(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("DELETE", pattern, handler)
+}
+
+func (this *HttpServer) HandlePatch(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("PATCH", pattern, handler)
+}
+
+func (this *HttpServer) HandleOptions(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("OPTIONS", pattern, handler)
+}
+
+func (this *HttpServer) HandleHead(pattern string, handler gin.HandlerFunc) {
+	this.httpMux.Handle("HEAD", pattern, handler)
 }

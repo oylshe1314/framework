@@ -1,17 +1,18 @@
 package zk
 
 import (
-	"github.com/oylshe1314/framework/server"
 	"time"
+
+	"github.com/oylshe1314/framework/component"
 )
 
 type Option struct {
-	Name string
-	Guid string
+	Name string `json:"name"`
+	Guid string `json:"guid"`
 
 	Servers  []string      `json:"servers"`
 	Timeout  time.Duration `json:"timeout"`
 	RootPath string        `json:"rootPath"`
 
-	Components server.ComponentsOption `json:"components"`
+	Components component.ComponentsOption `json:"components"`
 }
