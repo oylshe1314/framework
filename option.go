@@ -15,10 +15,6 @@ import (
 
 type Option option.Option
 
-func (opt Option) SetOption(optional any) ([]component.Component, error) {
-	return opt.setOption(optional)
-}
-
 func (opt Option) setOption(optional any) ([]component.Component, error) {
 	var st = reflect.TypeOf(optional)
 	if st.Kind() != reflect.Pointer || st.Elem().Kind() != reflect.Struct {

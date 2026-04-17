@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/go-zookeeper/zk"
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/client/srd"
+	"github.com/oylshe1314/framework/errors"
 )
 
 type SubscriberClient struct {
 	client
 
-	callbacks map[string]srd.SubscribeCallback
+	subscriptions map[string]srd.SubscribeCallback
 }
 
 func (this *SubscriberClient) Init(ctx context.Context) error {
@@ -36,6 +38,8 @@ func (this *SubscriberClient) Init(ctx context.Context) error {
 		}
 	}
 
+	this.client.dialer = nil
+	this.client.handler = this
 	return nil
 }
 
@@ -72,6 +76,60 @@ func (this *SubscriberClient) readServiceData(conn *zk.Conn, nodesPath string, z
 		nodes = append(nodes, node)
 	}
 	return nodes
+}
+
+func (this *SubscriberClient) listenServiceData(conn *zk.Conn, service string, callback srd.SubscribeCallback) {
+	var nodesPath = this.GetOption().RootPath + "/" + service + defaultNodesPath
+	for {
+		zkNodes, _, eventChan, err := conn.ChildrenW(nodesPath)
+		if err != nil {
+			if errors.Is(err, zk.ErrNoNode) {
+				this.logger.Warnf("The node of service '%s' was not exists, path: %s", service, nodesPath)
+				time.Sleep(time.Second * 10)
+				continue
+			}
+
+			this.logger.Errorf("Get service '%s' child nodes error, path: %s, err: %v", service, nodesPath, err)
+			return
+		}
+
+		callback(service, this.readServiceData(conn, nodesPath, zkNodes))
+
+		select {
+		case event, ok := <-eventChan:
+			if !ok {
+				continue
+			}
+			if event.Err != nil {
+				if errors.Is(event.Err, zk.ErrConnectionClosed) {
+					return
+				}
+				continue
+			}
+		case <-this.ctx.Done():
+			if errors.Is(this.ctx.Err(), context.Canceled) {
+				return
+			}
+		}
+	}
+}
+
+func (this *SubscriberClient) startServiceListen(conn *zk.Conn) {
+	for service, callback := range this.subscriptions {
+		go func() {
+			this.listenServiceData(conn, service, callback)
+		}()
+	}
+}
+
+func (this *SubscriberClient) handleConnect(conn *zk.Conn) {
+	if conn != nil && conn.State() >= zk.StateConnected {
+		this.startServiceListen(conn)
+	}
+}
+
+func (this *SubscriberClient) handleDisconnect(conn *zk.Conn) {
+
 }
 
 func (this *SubscriberClient) Subscribe(service string, callback srd.SubscribeCallback) {

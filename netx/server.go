@@ -2,6 +2,9 @@ package netx
 
 import (
 	"context"
+	"net"
+	"runtime/debug"
+
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
@@ -11,8 +14,6 @@ import (
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
 	"github.com/oylshe1314/framework/store"
-	"net"
-	"runtime/debug"
 )
 
 type NetServer struct {
@@ -33,7 +34,7 @@ type NetServer struct {
 
 func (this *NetServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'NetServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var err error

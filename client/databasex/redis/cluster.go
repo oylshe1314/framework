@@ -6,6 +6,18 @@ type clusterClient struct {
 	simpleClient
 }
 
-func OpenCluster(addresses []string, username, password string) Redis {
-	return &clusterClient{simpleClient{c: redis.NewClusterClient(&redis.ClusterOptions{Addrs: addresses, Username: username, Password: password})}}
+type ClusterOptions redis.ClusterOptions
+
+func OpenCluster(addresses []string, withOptions ...func(options *ClusterOptions)) Redis {
+	var options = &redis.ClusterOptions{Addrs: addresses}
+
+	for i := range withOptions {
+		withOptions[i]((*ClusterOptions)(options))
+	}
+
+	return &clusterClient{
+		simpleClient{
+			client: redis.NewClusterClient(options),
+		},
+	}
 }

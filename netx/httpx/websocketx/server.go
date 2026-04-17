@@ -33,7 +33,7 @@ type WebsocketServer struct {
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'WebsocketServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var err error

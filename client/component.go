@@ -24,6 +24,10 @@ func NewClientComponent[T Client](name string, client T) Component[T] {
 	}
 }
 
+func (this *clientComponent[T]) Name() string {
+	return this.name
+}
+
 func (this *clientComponent[T]) Init(ctx context.Context) error {
 	return this.client.Init(ctx)
 }
@@ -41,10 +45,6 @@ func (this *clientComponent[T]) Start() error {
 
 func (this *clientComponent[T]) Close() error {
 	return this.client.Close()
-}
-
-func (this *clientComponent[T]) Name() string {
-	return this.name
 }
 
 func (this *clientComponent[T]) Client() T {

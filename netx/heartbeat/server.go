@@ -26,7 +26,7 @@ type HeartbeatServer struct {
 
 func (this *HeartbeatServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'HeartbeatServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	if this.GetOption().Timeout == 0 {

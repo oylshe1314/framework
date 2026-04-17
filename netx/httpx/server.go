@@ -28,7 +28,7 @@ type HttpServer struct {
 
 func (this *HttpServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'HttpServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var err error

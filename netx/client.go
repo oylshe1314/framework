@@ -27,7 +27,7 @@ type NetClient struct {
 
 func (this *NetClient) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'NetServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var err error

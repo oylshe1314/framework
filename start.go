@@ -15,14 +15,15 @@ import (
 
 	"github.com/oylshe1314/framework/client"
 	"github.com/oylshe1314/framework/option"
+	"github.com/oylshe1314/framework/profile"
 	"github.com/oylshe1314/framework/server"
 	"github.com/oylshe1314/framework/util"
 )
 
 var (
 	ProgramHash = "EMPTY"
-	ConfigHash  = "EMPTY"
 	DataHash    = "EMPTY"
+	ConfigHash  = "EMPTY"
 )
 
 func Start(svr server.Server) {
@@ -85,7 +86,7 @@ func start(svr server.Server) int {
 func run(svr server.Server, opt option.Option) int {
 
 	fmt.Println("Server set option")
-	var cs, err = Option(opt).SetOption(svr)
+	var cs, err = Option(opt).setOption(svr)
 	if err != nil {
 		fmt.Println("Server init failed, ", err)
 		return 1
@@ -118,9 +119,9 @@ func run(svr server.Server, opt option.Option) int {
 	}
 
 	fmt.Println("Program-Hash: ", ProgramHash)
-	fmt.Println("Config-Hash: ", ConfigHash)
 	fmt.Println("Data-Hash: ", DataHash)
-	fmt.Println("Profile-Active: ", Active)
+	fmt.Println("Config-Hash: ", ConfigHash)
+	fmt.Println("Profile-Active: ", profile.Active)
 
 	fmt.Println("Server startup")
 	for _, cc := range cs {

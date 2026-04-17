@@ -106,9 +106,8 @@ func (this *RegisterClient) Init(ctx context.Context) error {
 		}
 	}
 
-	this.client.zkDialer = this.dial
-	this.client.connectHandler = this.handleConnect
-	this.client.disconnectHandler = this.handleDisconnect
+	this.client.dialer = this.dial
+	this.client.handler = this
 	return nil
 }
 

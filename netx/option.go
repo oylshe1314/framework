@@ -1,6 +1,8 @@
 package netx
 
-import "github.com/oylshe1314/framework/server"
+import (
+	"github.com/oylshe1314/framework/component"
+)
 
 type Option struct {
 	Network string `json:"network"`
@@ -8,5 +10,5 @@ type Option struct {
 
 	Codec string `json:"codec"`
 
-	Components server.ComponentsOption `json:"components"`
+	Components component.ComponentsOption `json:"components"`
 }

@@ -3,11 +3,11 @@ package component
 import "context"
 
 type Component interface {
+	Name() string
+
 	Init(ctx context.Context) error
 	Start() error
 	Close() error
-
-	Name() string
 }
 
 type ComponentsOption map[string]string
