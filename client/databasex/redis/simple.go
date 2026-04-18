@@ -7,27 +7,39 @@ import (
 )
 
 type simpleClient struct {
-	c redis.UniversalClient
+	client redis.UniversalClient
 }
 
-func OpenRedis(address string, password string, db int) Redis {
-	return nil
+type Options redis.Options
+
+func OpenRedis(address string, withOptions ...func(options *Options)) Redis {
+	var options = &redis.Options{
+		Addr: address,
+	}
+
+	for i := range withOptions {
+		withOptions[i]((*Options)(options))
+	}
+
+	return &simpleClient{
+		client: redis.NewClient(options),
+	}
 }
 
 func (this *simpleClient) Close() error {
-	return this.c.Close()
+	return this.client.Close()
 }
 
 func (this *simpleClient) Exec(ctx context.Context, cmd string, args ...interface{}) error {
 	args = append([]interface{}{cmd}, args...)
-	var dr = this.c.Do(ctx, args...)
+	var dr = this.client.Do(ctx, args...)
 	return dr.Err()
 }
 
 func (this *simpleClient) String(ctx context.Context, cmd string, args ...interface{}) (string, error) {
 	args = append([]interface{}{cmd}, args...)
 	var c = redis.NewStringCmd(ctx, args...)
-	var err = this.c.Process(ctx, c)
+	var err = this.client.Process(ctx, c)
 	if err != nil {
 		return "", err
 	}
@@ -37,7 +49,7 @@ func (this *simpleClient) String(ctx context.Context, cmd string, args ...interf
 func (this *simpleClient) Strings(ctx context.Context, cmd string, args ...interface{}) (Strings, error) {
 	args = append([]interface{}{cmd}, args...)
 	var c = redis.NewStringSliceCmd(ctx, args...)
-	var err = this.c.Process(ctx, c)
+	var err = this.client.Process(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +59,7 @@ func (this *simpleClient) Strings(ctx context.Context, cmd string, args ...inter
 func (this *simpleClient) StringMap(ctx context.Context, cmd string, args ...interface{}) (StringMap, error) {
 	args = append([]interface{}{cmd}, args...)
 	var c = redis.NewMapStringStringCmd(ctx, args...)
-	var err = this.c.Process(ctx, c)
+	var err = this.client.Process(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -55,5 +67,5 @@ func (this *simpleClient) StringMap(ctx context.Context, cmd string, args ...int
 }
 
 func (this *simpleClient) Subscribe(ctx context.Context) SubConn {
-	return &subConn{c: this.c.Subscribe(ctx)}
+	return &subConn{c: this.client.Subscribe(ctx)}
 }

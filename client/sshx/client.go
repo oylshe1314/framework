@@ -3,11 +3,12 @@ package sshx
 import (
 	"bytes"
 	"context"
-	"framework/errors"
-	"framework/option"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/option"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -26,16 +27,16 @@ func NewSshClient(opt *Option) *SshClient {
 
 func (this *SshClient) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'SshClient' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var opt = this.GetOption()
 	if opt.Address == "" {
-		return errors.New("'SshClient' option.address is empty")
+		return errors.New("option 'address' is empty")
 	}
 
 	if opt.User == "" {
-		return errors.New("'SshClient' option.user is empty")
+		return errors.New("option 'user' is empty")
 	}
 
 	return nil

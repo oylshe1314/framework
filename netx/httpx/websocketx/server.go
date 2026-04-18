@@ -2,16 +2,17 @@ package websocketx
 
 import (
 	"context"
-	"framework"
-	"framework/errors"
-	"framework/log"
-	"framework/netx/codec"
-	"framework/netx/httpx"
-	"framework/netx/route"
-	"framework/netx/transport"
-	"framework/option"
-	"framework/store"
 	"net/http"
+
+	"github.com/oylshe1314/framework"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/netx/codec"
+	"github.com/oylshe1314/framework/netx/httpx"
+	"github.com/oylshe1314/framework/netx/route"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/option"
+	"github.com/oylshe1314/framework/store"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -32,7 +33,7 @@ type WebsocketServer struct {
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'WebsocketServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	var err error
@@ -112,5 +113,5 @@ func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.H
 }
 
 func (this *WebsocketServer) HandleUpgrade(pattern string, handler route.ConnHandler) {
-	this.Any(pattern, this.upgradeHandlerFunc(handler))
+	this.Handle(pattern, this.upgradeHandlerFunc(handler))
 }

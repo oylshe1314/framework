@@ -3,16 +3,17 @@ package zk
 import (
 	"context"
 	"encoding/json"
-	"framework"
-	"framework/client/srd"
-	"framework/errors"
-	"framework/netx"
-	"framework/netx/httpx"
-	"framework/netx/httpx/websocketx"
-	"framework/server"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/oylshe1314/framework"
+	"github.com/oylshe1314/framework/client/srd"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/netx"
+	"github.com/oylshe1314/framework/netx/httpx"
+	"github.com/oylshe1314/framework/netx/httpx/websocketx"
+	"github.com/oylshe1314/framework/server"
 
 	"github.com/go-zookeeper/zk"
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ import (
 type RegisterClient struct {
 	client
 
-	node any
+	node *srd.ServiceNode
 
 	version int32
 	svcPath string
@@ -49,13 +50,17 @@ func (this *RegisterClient) extractNode(ctx context.Context) error {
 	}
 
 	if len(ss) > 1 {
-		return errors.New("find multiple server of 'NetServer' or 'HttpServer' or 'WebsocketServer' to register")
+		return errors.New("find multiple servers of 'NetServer' or 'HttpServer' or 'WebsocketServer' to register")
 	}
 
 	return this.createNode(ss[0])
 }
 
 func (this *RegisterClient) createNode(svr server.Server) error {
+	var name = this.GetOption().Name
+	if name == "" {
+		return errors.New("the name of service to register cannot be empty")
+	}
 
 	var guid = this.GetOption().Guid
 	if guid == "" {
@@ -64,59 +69,16 @@ func (this *RegisterClient) createNode(svr server.Server) error {
 			return err
 		}
 		guid = id.String()
+		this.GetOption().Guid = guid
 	}
 
 	switch s := svr.(type) {
 	case *netx.NetServer:
-		var netOption = s.GetOption()
-		var node = &srd.NetNode{
-			Node: srd.Node{
-				Type: "net",
-				Name: this.GetOption().Name,
-				Guid: guid,
-			},
-			Network: netOption.Network,
-			Address: netOption.Address,
-			Codec:   netOption.Codec,
-		}
-		this.node = node
+		this.node = srd.NewNetNode(this.GetOption().Name, guid, s.GetOption())
 	case *httpx.HttpServer:
-		var httpOption = s.GetOption()
-		var node = &srd.HttpNode{
-			NetNode: srd.NetNode{
-				Node: srd.Node{
-					Type: "http",
-					Name: this.GetOption().Name,
-					Guid: guid,
-				},
-				Network: httpOption.Network,
-				Address: httpOption.Address,
-				Codec:   httpOption.Codec,
-			},
-			BasePath: httpOption.BasePath,
-			Secure:   httpOption.Tls != nil,
-		}
-		this.node = node
+		this.node = srd.NewHttpNode(this.GetOption().Name, guid, s.GetOption())
 	case *websocketx.WebsocketServer:
-		var websocketOption = s.GetOption()
-		var node = &srd.WebsocketNode{
-			HttpNode: srd.HttpNode{
-				NetNode: srd.NetNode{
-					Node: srd.Node{
-						Type: "websocket",
-						Name: this.GetOption().Name,
-						Guid: guid,
-					},
-					Network: websocketOption.Network,
-					Address: websocketOption.Address,
-					Codec:   websocketOption.Codec,
-				},
-				BasePath: websocketOption.BasePath,
-				Secure:   websocketOption.Tls != nil,
-			},
-			AllowOrigins: websocketOption.AllowOrigins,
-		}
-		this.node = node
+		this.node = srd.NewWebsocketNode(this.GetOption().Name, guid, s.GetOption())
 	}
 	return nil
 }
@@ -127,24 +89,25 @@ func (this *RegisterClient) Init(ctx context.Context) error {
 		return err
 	}
 
-	var registerServerName = this.GetOption().Components.Get("registerServer")
-	if registerServerName == "" {
-		registerServerName = "registerServer"
-	}
+	if this.node == nil {
+		var registerServerName = this.GetOption().Components.Get("registerServer")
+		if registerServerName == "" {
+			registerServerName = "registerServer"
+		}
 
-	var registerServer = framework.ServerFromContext[server.Server](ctx, registerServerName)
-	if registerServer != nil {
-		err = this.createNode(registerServer)
-	} else {
-		err = this.extractNode(ctx)
-		if err != nil {
-			return err
+		var registerServer = framework.ServerFromContext[server.Server](ctx, registerServerName)
+		if registerServer != nil {
+			err = this.createNode(registerServer)
+		} else {
+			err = this.extractNode(ctx)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	this.client.zkDialer = this.dial
-	this.client.connectHandler = this.handleConnect
-	this.client.disconnectHandler = this.handleDisconnect
+	this.client.dialer = this.dial
+	this.client.handler = this
 	return nil
 }
 
@@ -154,7 +117,7 @@ func (this *RegisterClient) dial(network, address string, timeout time.Duration)
 		return nil, err
 	}
 
-	this.node.(*srd.NetNode).Address = conn.LocalAddr().String()
+	this.node.Address = conn.LocalAddr().String()
 	return conn, nil
 }
 
@@ -180,7 +143,7 @@ func (this *RegisterClient) createParentNodes(conn *zk.Conn, path string) error 
 }
 
 func (this *RegisterClient) setServiceNode(conn *zk.Conn) (string, error) {
-	var node = this.node.(*srd.Node)
+	var node = this.node
 
 	this.version = 0
 	this.svcPath = ""
@@ -287,4 +250,8 @@ func (this *RegisterClient) handleDisconnect(conn *zk.Conn) {
 	if conn != nil && conn.State() >= zk.StateConnected {
 		this.deregister(conn)
 	}
+}
+
+func (this *RegisterClient) SetNode(node *srd.ServiceNode) {
+	this.node = node
 }

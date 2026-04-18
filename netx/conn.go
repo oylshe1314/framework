@@ -2,11 +2,11 @@ package netx
 
 import (
 	"encoding/binary"
-	"framework/errors"
-	"framework/log"
-	"framework/netx/codec"
-	"framework/netx/transport"
-	"framework/store"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/netx/codec"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/store"
 	"io"
 	"net"
 	"runtime/debug"

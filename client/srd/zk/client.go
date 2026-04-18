@@ -2,11 +2,13 @@ package zk
 
 import (
 	"context"
-	"framework"
-	"framework/errors"
-	"framework/log"
-	"framework/option"
+	"net"
 	"time"
+
+	"github.com/oylshe1314/framework"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/log"
+	"github.com/oylshe1314/framework/option"
 
 	"github.com/go-zookeeper/zk"
 )
@@ -19,6 +21,11 @@ const (
 	defaultTimeout = time.Millisecond * 30000
 )
 
+type connHandler interface {
+	handleConnect(conn *zk.Conn)
+	handleDisconnect(conn *zk.Conn)
+}
+
 type client struct {
 	option.Optional[Option]
 
@@ -27,19 +34,18 @@ type client struct {
 
 	logger log.Logger
 
-	zkDialer zk.Dialer
+	dialer zk.Dialer
 
-	connectHandler    func(*zk.Conn)
-	disconnectHandler func(*zk.Conn)
+	handler connHandler
 }
 
 func (this *client) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'client' option is nil")
+		return errors.New("option is nil")
 	}
 
 	if len(this.GetOption().Servers) == 0 {
-		return errors.New("'client' server list is empty")
+		return errors.New("option 'servers' is empty")
 	}
 
 	if this.GetOption().Timeout == 0 {
@@ -63,7 +69,6 @@ func (this *client) Init(ctx context.Context) error {
 	}
 
 	this.ctx, this.cancel = context.WithCancel(ctx)
-
 	return nil
 }
 
@@ -78,8 +83,15 @@ func (this *client) work() error {
 	var err error
 	var conn *zk.Conn
 	var eventChan <-chan zk.Event
+
+	var dialer = this.dialer
+	if dialer == nil {
+		dialer = net.DialTimeout
+	}
+
+	var logger = &internalLogger{Logger: this.logger}
 	for {
-		conn, eventChan, err = zk.Connect(this.GetOption().Servers, this.GetOption().Timeout, zk.WithDialer(this.zkDialer), zk.WithLogger(&logger{Logger: this.logger}))
+		conn, eventChan, err = zk.Connect(this.GetOption().Servers, this.GetOption().Timeout, zk.WithDialer(dialer), zk.WithLogger(logger))
 		if err != nil {
 			this.logger.Error("connect to zookeeper server failed, ", err)
 			time.Sleep(time.Second * 3)
@@ -104,11 +116,9 @@ func (this *client) work() error {
 				case zk.StateDisconnected:
 					this.logger.Warn("Zookeeper server disconnected, will reconnect after")
 					if conn != nil {
+						this.handler.handleDisconnect(nil)
 						conn.Close()
 						conn = nil
-						if this.disconnectHandler != nil {
-							this.disconnectHandler(nil)
-						}
 					}
 					time.Sleep(time.Second * 3)
 					break eventLoop
@@ -117,16 +127,12 @@ func (this *client) work() error {
 				case zk.StateConnectedReadOnly:
 					return errors.Errorf("zookeeper server '%s' is connected but read only", conn.Server())
 				case zk.StateHasSession:
-					if this.connectHandler != nil {
-						this.connectHandler(conn)
-					}
+					this.handler.handleConnect(conn)
 					continue
 				}
 			case <-this.ctx.Done():
 				if errors.Is(this.ctx.Err(), context.Canceled) {
-					if this.disconnectHandler != nil {
-						this.disconnectHandler(conn)
-					}
+					this.handler.handleConnect(conn)
 					conn.Close()
 					conn = nil
 					return nil
@@ -137,8 +143,8 @@ func (this *client) work() error {
 }
 
 func (this *client) Work() error {
-	if this.connectHandler == nil && this.disconnectHandler == nil {
-		return errors.Error("at least one of 'connectHandler' and 'disconnectHandler' is not nil")
+	if this.handler == nil {
+		return errors.Error("the connection handler is nil")
 	}
 	return this.work()
 }

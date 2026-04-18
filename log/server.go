@@ -2,8 +2,8 @@ package log
 
 import (
 	"context"
-	"framework/errors"
-	"framework/option"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/option"
 )
 
 type LoggerServer struct {
@@ -14,7 +14,7 @@ type LoggerServer struct {
 
 func (this *LoggerServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'LoggerServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	writer, err := NewFileWriter(this.GetOption())

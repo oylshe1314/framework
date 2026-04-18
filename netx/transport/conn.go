@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"framework/store"
+	"github.com/oylshe1314/framework/store"
 	"io"
 	"net"
 )

@@ -5,9 +5,6 @@ import (
 	"crypto/md5"
 	"flag"
 	"fmt"
-	"framework/option"
-	"framework/server"
-	"framework/util"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -15,12 +12,18 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/oylshe1314/framework/client"
+	"github.com/oylshe1314/framework/option"
+	"github.com/oylshe1314/framework/profile"
+	"github.com/oylshe1314/framework/server"
+	"github.com/oylshe1314/framework/util"
 )
 
 var (
 	ProgramHash = "EMPTY"
-	ConfigHash  = "EMPTY"
 	DataHash    = "EMPTY"
+	ConfigHash  = "EMPTY"
 )
 
 func Start(svr server.Server) {
@@ -83,7 +86,7 @@ func start(svr server.Server) int {
 func run(svr server.Server, opt option.Option) int {
 
 	fmt.Println("Server set option")
-	var components, err = server.SetOption(svr, opt)
+	var cs, err = Option(opt).setOption(svr)
 	if err != nil {
 		fmt.Println("Server init failed, ", err)
 		return 1
@@ -100,25 +103,30 @@ func run(svr server.Server, opt option.Option) int {
 	}()
 
 	fmt.Println("Server initialization")
-	for _, component := range components {
+	for _, cc := range cs {
 		time.Sleep(time.Millisecond * 100)
-		err = component.Server().Init(ctx)
+		err = cc.Init(ctx)
 		if err != nil {
 			return 1
 		}
 
-		ctx = ContextWithServer(ctx, component.Name(), component.Server())
+		switch tc := cc.(type) {
+		case server.Component[server.Server]:
+			ctx = ContextWithServer(ctx, tc.Name(), tc.Server())
+		case client.Component[client.Client]:
+			ctx = ContextWithClient(ctx, tc.Name(), tc.Client())
+		}
 	}
 
 	fmt.Println("Program-Hash: ", ProgramHash)
-	fmt.Println("Config-Hash: ", ConfigHash)
 	fmt.Println("Data-Hash: ", DataHash)
-	fmt.Println("Profile-Active: ", Active)
+	fmt.Println("Config-Hash: ", ConfigHash)
+	fmt.Println("Profile-Active: ", profile.Active)
 
 	fmt.Println("Server startup")
-	for _, component := range components {
+	for _, cc := range cs {
 		time.Sleep(time.Millisecond * 100)
-		err = component.Server().Start()
+		err = cc.Start()
 		if err != nil {
 			fmt.Println("Server start failed, ", err)
 			return 1
@@ -138,9 +146,9 @@ func run(svr server.Server, opt option.Option) int {
 		stopped.Store(true)
 
 		// Server shutdown order: reverse of server startup
-		for i := len(components) - 1; i >= 0; i-- {
+		for i := len(cs) - 1; i >= 0; i-- {
 			time.Sleep(time.Millisecond * 100)
-			_ = components[i].Server().Close()
+			_ = cs[i].Close()
 		}
 		cancel()
 	}()

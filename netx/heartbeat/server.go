@@ -2,9 +2,9 @@ package heartbeat
 
 import (
 	"context"
-	"framework/errors"
-	"framework/netx/transport"
-	"framework/option"
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/option"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,7 +26,7 @@ type HeartbeatServer struct {
 
 func (this *HeartbeatServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("'HeartbeatServer' option is nil")
+		return errors.New("option is nil")
 	}
 
 	if this.GetOption().Timeout == 0 {

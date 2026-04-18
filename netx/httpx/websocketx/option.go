@@ -1,6 +1,6 @@
 package websocketx
 
-import "framework/netx/httpx"
+import "github.com/oylshe1314/framework/netx/httpx"
 
 type Option struct {
 	httpx.Option
