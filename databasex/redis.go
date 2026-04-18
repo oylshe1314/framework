@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/oylshe1314/framework/client/databasex/redis"
+	redis2 "github.com/oylshe1314/framework/databasex/redis"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/option"
 )
@@ -31,7 +31,7 @@ type RedisOption struct {
 type RedisClient struct {
 	option.Optional[RedisOption]
 
-	redis.Redis
+	redis2.Redis
 }
 
 func (this *RedisClient) Init(ctx context.Context) error {
@@ -49,7 +49,7 @@ func (this *RedisClient) Init(ctx context.Context) error {
 func (this *RedisClient) openRedis() error {
 
 	if len(this.GetOption().Addresses) > 1 {
-		this.Redis = redis.OpenCluster(this.GetOption().Addresses, func(options *redis.ClusterOptions) {
+		this.Redis = redis2.OpenCluster(this.GetOption().Addresses, func(options *redis2.ClusterOptions) {
 			if this.GetOption().Protocol != 0 {
 				options.Protocol = this.GetOption().Protocol
 			}
@@ -94,7 +94,7 @@ func (this *RedisClient) openRedis() error {
 			}
 		})
 	} else {
-		this.Redis = redis.OpenRedis(this.GetOption().Addresses[0], func(options *redis.Options) {
+		this.Redis = redis2.OpenRedis(this.GetOption().Addresses[0], func(options *redis2.Options) {
 			if this.GetOption().Protocol != 0 {
 				options.Protocol = this.GetOption().Protocol
 			}
