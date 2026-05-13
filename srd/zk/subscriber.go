@@ -9,14 +9,14 @@ import (
 
 	"github.com/go-zookeeper/zk"
 	"github.com/oylshe1314/framework"
-	"github.com/oylshe1314/framework/client/srd"
 	"github.com/oylshe1314/framework/errors"
+	srd2 "github.com/oylshe1314/framework/srd"
 )
 
 type SubscriberClient struct {
 	client
 
-	subscriptions map[string]srd.SubscribeCallback
+	subscriptions map[string]srd2.SubscribeCallback
 }
 
 func (this *SubscriberClient) Init(ctx context.Context) error {
@@ -43,8 +43,8 @@ func (this *SubscriberClient) Init(ctx context.Context) error {
 	return nil
 }
 
-func (this *SubscriberClient) readServiceData(conn *zk.Conn, nodesPath string, zkNodes []string) []*srd.ServiceNode {
-	var nodes []*srd.ServiceNode
+func (this *SubscriberClient) readServiceData(conn *zk.Conn, nodesPath string, zkNodes []string) []*srd2.ServiceNode {
+	var nodes []*srd2.ServiceNode
 	for _, zkNode := range zkNodes {
 		if !strings.HasPrefix(zkNode, "_c_") {
 			continue
@@ -62,7 +62,7 @@ func (this *SubscriberClient) readServiceData(conn *zk.Conn, nodesPath string, z
 			continue
 		}
 
-		var node = new(srd.ServiceNode)
+		var node = new(srd2.ServiceNode)
 		err = json.Unmarshal(data, node)
 		if err != nil {
 			this.logger.Errorf("Unmarshal service node data error, node: %s, data: %s, err: %v", dataPath, data, err)
@@ -78,7 +78,7 @@ func (this *SubscriberClient) readServiceData(conn *zk.Conn, nodesPath string, z
 	return nodes
 }
 
-func (this *SubscriberClient) listenServiceData(conn *zk.Conn, service string, callback srd.SubscribeCallback) {
+func (this *SubscriberClient) listenServiceData(conn *zk.Conn, service string, callback srd2.SubscribeCallback) {
 	var nodesPath = this.GetOption().RootPath + "/" + service + defaultNodesPath
 	for {
 		zkNodes, _, eventChan, err := conn.ChildrenW(nodesPath)
@@ -132,6 +132,6 @@ func (this *SubscriberClient) handleDisconnect(conn *zk.Conn) {
 
 }
 
-func (this *SubscriberClient) Subscribe(service string, callback srd.SubscribeCallback) {
+func (this *SubscriberClient) Subscribe(service string, callback srd2.SubscribeCallback) {
 
 }
