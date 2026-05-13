@@ -107,7 +107,7 @@ func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.H
 			}()
 
 			handler.HandleConnect(cc)
-			_ = cc.Serve(transport.MessageHandlerFunc(handler.HandleMessage))
+			_ = cc.Serve(transport.MessageHandleFunc(handler.HandleMessage))
 		}()
 	}
 }

@@ -2,14 +2,13 @@ package route
 
 import (
 	"github.com/oylshe1314/framework/netx/transport"
-	"github.com/oylshe1314/framework/util"
 )
 
 type ConnRegistry interface {
 	ConnectHandler(func(transport.Conn))
 	DisconnectHandler(func(transport.Conn))
 	DefaultHandler(transport.MessageHandler)
-	MessageHandler(uint16, uint16, transport.MessageHandler)
+	MessageHandler(uint32, transport.MessageHandler)
 }
 
 type ConnHandler interface {
@@ -41,8 +40,8 @@ func (this *ConnMux) DefaultHandler(handler transport.MessageHandler) {
 	this.defaultHandler = handler
 }
 
-func (this *ConnMux) MessageHandler(modId, msgId uint16, handler transport.MessageHandler) {
-	this.messageHandler[util.Compose2Uint16(modId, msgId)] = handler
+func (this *ConnMux) MessageHandler(cmd uint32, handler transport.MessageHandler) {
+	this.messageHandler[cmd] = handler
 }
 
 func (this *ConnMux) HandleConnect(conn transport.Conn) {
@@ -58,7 +57,7 @@ func (this *ConnMux) HandleDisconnect(conn transport.Conn) {
 }
 
 func (this *ConnMux) HandleMessage(conn transport.Conn, msg transport.Message) {
-	var messageHandler = this.messageHandler[util.Compose2Uint16(msg.ModId(), msg.MsgId())]
+	var messageHandler = this.messageHandler[msg.Command()]
 	if messageHandler != nil {
 		messageHandler.Handle(conn, msg)
 	} else {

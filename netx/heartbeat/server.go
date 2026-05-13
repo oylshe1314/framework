@@ -2,12 +2,13 @@ package heartbeat
 
 import (
 	"context"
-	"github.com/oylshe1314/framework/errors"
-	"github.com/oylshe1314/framework/netx/transport"
-	"github.com/oylshe1314/framework/option"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/oylshe1314/framework/errors"
+	"github.com/oylshe1314/framework/netx/transport"
+	"github.com/oylshe1314/framework/option"
 )
 
 type HeartbeatServer struct {
@@ -113,13 +114,13 @@ func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandler) 
 	this.heartbeatHandler = handler
 }
 
-func (this *HeartbeatServer) HandleHeartbeat() (uint16, uint16, transport.MessageHandler) {
-	return this.GetOption().ModId, this.GetOption().MsgId, transport.MessageHandlerFunc(func(conn transport.Conn, msg transport.Message) {
+func (this *HeartbeatServer) HandleHeartbeat() (uint32, transport.MessageHandler) {
+	return this.GetOption().Command, transport.MessageHandleFunc(func(conn transport.Conn, msg transport.Message) {
 		this.Add(conn)
 		if this.heartbeatHandler != nil {
 			this.heartbeatHandler.Handle(conn, msg)
 		} else {
-			_ = msg.Reply(nil)
+			_ = conn.Send(msg.Command(), nil)
 		}
 	})
 }

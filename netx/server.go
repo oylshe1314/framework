@@ -128,7 +128,7 @@ func (this *NetServer) serve() error {
 			}()
 
 			this.connMux.HandleConnect(cc)
-			_ = cc.Serve(transport.MessageHandlerFunc(this.connMux.HandleMessage))
+			_ = cc.Serve(transport.MessageHandleFunc(this.connMux.HandleMessage))
 		}()
 	}
 }
@@ -156,6 +156,6 @@ func (this *NetServer) DefaultHandler(handler transport.MessageHandler) {
 	this.connMux.DefaultHandler(handler)
 }
 
-func (this *NetServer) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandler) {
-	this.connMux.MessageHandler(modId, msgId, handler)
+func (this *NetServer) MessageHandler(cmd uint32, handler transport.MessageHandler) {
+	this.connMux.MessageHandler(cmd, handler)
 }

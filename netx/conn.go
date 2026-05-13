@@ -2,25 +2,22 @@ package netx
 
 import (
 	"encoding/binary"
+	"io"
+	"net"
+	"runtime/debug"
+
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/netx/codec"
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/store"
-	"io"
-	"net"
-	"runtime/debug"
 )
 
 type conn struct {
-	conn net.Conn
-
+	conn   net.Conn
 	logger log.Logger
-
-	codec codec.Codec
-
-	attr store.Attribute
-
+	codec  codec.Codec
+	attr   store.Attribute
 	closed bool
 }
 
@@ -45,55 +42,74 @@ func (this *conn) Attribute() store.Attribute {
 	return this.attr
 }
 
-func (this *conn) Read() (transport.Message, error) {
+func (this *conn) read() (uint32, []byte, error) {
 	var head = make([]byte, transport.MessageHeadLength)
 	_, err := this.conn.Read(head)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	var modId = binary.LittleEndian.Uint16(head[:2])
-	var msgId = binary.LittleEndian.Uint16(head[2:4])
+	var cmd = binary.LittleEndian.Uint32(head[:4])
 	var length = binary.LittleEndian.Uint32(head[4:8])
-
-	var body []byte
-	if length > 0 {
-		if length >= uint32(transport.MessageMaxLength) {
-			return nil, errors.New("message too long")
-		}
-
-		body = make([]byte, length)
-		_, err = this.conn.Read(body)
-		if err != nil {
-			return nil, err
-		}
+	if length == 0 {
+		return cmd, nil, nil
 	}
-	return &message{conn: this, modId: modId, msgId: msgId, body: body}, nil
+
+	if length >= uint32(transport.MessageMaxLength) {
+		return 0, nil, errors.New("message too long")
+	}
+
+	var body = make([]byte, length)
+	_, err = this.conn.Read(body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return cmd, body, nil
 }
 
-func (this *conn) Write(modId, msgId uint16, v any) error {
+func (this *conn) write(cmd uint32, body []byte) error {
 	var err error
-	var body []byte
+	var length = uint32(len(body))
 
-	if v != nil {
-		body, err = this.codec.Encode(v)
-		if err != nil {
-			return err
-		}
+	var head [transport.MessageHeadLength]byte
+	binary.LittleEndian.PutUint32(head[:4], cmd)
+	binary.LittleEndian.PutUint32(head[4:], length)
+
+	_, err = this.conn.Write(head[:])
+	if err != nil {
+		return err
 	}
 
-	var buf = make([]byte, transport.MessageHeadLength+len(body))
-
-	binary.LittleEndian.PutUint16(buf[:2], modId)
-	binary.LittleEndian.PutUint16(buf[2:4], msgId)
-	binary.LittleEndian.PutUint32(buf[4:8], uint32(len(body)))
-
-	if len(body) > 0 {
-		copy(buf[8:], body)
+	if length > 0 {
+		_, err = this.conn.Write(body)
 	}
 
-	_, err = this.conn.Write(buf)
 	return err
+}
+
+func (this *conn) Codec() codec.Codec {
+	return this.codec
+}
+
+func (this *conn) Read() (transport.Message, error) {
+	cmd, body, err := this.read()
+	if err != nil {
+		return nil, err
+	}
+	return newMessage(cmd, body, this.codec), nil
+}
+
+func (this *conn) Send(cmd uint32, v any) error {
+	if v == nil {
+		return this.write(cmd, nil)
+	}
+
+	body, err := this.Codec().Encode(v)
+	if err != nil {
+		return err
+	}
+	return this.write(cmd, body)
 }
 
 func (this *conn) Serve(handler transport.MessageHandler) error {

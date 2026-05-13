@@ -3,32 +3,33 @@ package websocketx
 import (
 	"bytes"
 	"io"
+
+	"github.com/oylshe1314/framework/netx/codec"
 )
 
 type message struct {
-	conn *conn
+	cmd  uint32
+	body []byte
 
-	modId uint16
-	msgId uint16
-	body  []byte
+	codec codec.Codec
 }
 
-func (this *message) ModId() uint16 {
-	return this.modId
+func newMessage(cmd uint32, body []byte, codec codec.Codec) *message {
+	return &message{cmd: cmd, body: body, codec: codec}
 }
 
-func (this *message) MsgId() uint16 {
-	return this.msgId
+func (this *message) Command() uint32 {
+	return this.cmd
+}
+
+func (this *message) Length() uint32 {
+	return uint32(len(this.body))
 }
 
 func (this *message) Body() io.Reader {
-	return bytes.NewBuffer(this.body)
+	return bytes.NewReader(this.body)
 }
 
 func (this *message) Read(v any) error {
-	return this.conn.codec.Decode(this.body, v)
-}
-
-func (this *message) Reply(v any) error {
-	return this.conn.Write(this.modId, this.msgId, v)
+	return this.codec.Decode(this.body, v)
 }

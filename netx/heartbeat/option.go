@@ -3,8 +3,7 @@ package heartbeat
 import "time"
 
 type Option struct {
-	ModId uint16 `json:"modId"`
-	MsgId uint16 `json:"msgId"`
+	Command uint32 `json:"command"`
 
 	Timeout time.Duration `json:"timeout"`
 }

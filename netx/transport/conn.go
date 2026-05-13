@@ -1,9 +1,10 @@
 package transport
 
 import (
-	"github.com/oylshe1314/framework/store"
 	"io"
 	"net"
+
+	"github.com/oylshe1314/framework/store"
 )
 
 type Conn interface {
@@ -14,7 +15,8 @@ type Conn interface {
 	RemoteAddr() net.Addr
 
 	Read() (Message, error)
-	Write(uint16, uint16, any) error
+
+	Send(cmd uint32, v any) error
 
 	Serve(handler MessageHandler) error
 }

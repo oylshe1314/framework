@@ -2,6 +2,8 @@ package netx
 
 import (
 	"context"
+	"net"
+
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
@@ -9,7 +11,6 @@ import (
 	"github.com/oylshe1314/framework/netx/route"
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
-	"net"
 )
 
 type NetClient struct {
@@ -88,12 +89,12 @@ func (this *NetClient) Read() (transport.Message, error) {
 	return this.conn.Read()
 }
 
-func (this *NetClient) Write(modId, msgId uint16, v any) error {
-	return this.conn.Write(modId, msgId, v)
+func (this *NetClient) Write(cmd uint32, v any) error {
+	return this.conn.Send(cmd, v)
 }
 
 func (this *NetClient) work() error {
-	return this.conn.Serve(transport.MessageHandlerFunc(this.mux.HandleMessage))
+	return this.conn.Serve(transport.MessageHandleFunc(this.mux.HandleMessage))
 }
 
 func (this *NetClient) Work() error {
@@ -112,6 +113,6 @@ func (this *NetClient) DefaultHandler(handler transport.MessageHandler) {
 	this.mux.DefaultHandler(handler)
 }
 
-func (this *NetClient) MessageHandler(modId uint16, msgId uint16, handler transport.MessageHandler) {
-	this.mux.MessageHandler(modId, msgId, handler)
+func (this *NetClient) MessageHandler(cmd uint32, handler transport.MessageHandler) {
+	this.mux.MessageHandler(cmd, handler)
 }

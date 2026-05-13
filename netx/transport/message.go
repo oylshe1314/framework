@@ -13,20 +13,19 @@ var (
 )
 
 type Message interface {
-	ModId() uint16
-	MsgId() uint16
+	Command() uint32
+	Length() uint32
 	Body() io.Reader
 
 	Read(any) error
-	Reply(any) error
 }
 
 type MessageHandler interface {
 	Handle(Conn, Message)
 }
 
-type MessageHandlerFunc func(Conn, Message)
+type MessageHandleFunc func(Conn, Message)
 
-func (fun MessageHandlerFunc) Handle(conn Conn, msg Message) {
+func (fun MessageHandleFunc) Handle(conn Conn, msg Message) {
 	fun(conn, msg)
 }
