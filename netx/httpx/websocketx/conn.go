@@ -96,7 +96,7 @@ func (this *conn) Send(cmd uint32, v any) error {
 	return this.write(cmd, body)
 }
 
-func (this *conn) Serve(handler transport.MessageHandler) error {
+func (this *conn) Serve(handleFunc transport.MessageHandleFunc) error {
 	defer func() {
 		if this.closed {
 			return
@@ -121,6 +121,6 @@ func (this *conn) Serve(handler transport.MessageHandler) error {
 			return err
 		}
 
-		handler.Handle(this, msg)
+		handleFunc(this, msg)
 	}
 }

@@ -16,7 +16,7 @@ type Conn interface {
 
 	Read() (Message, error)
 
-	Send(cmd uint32, v any) error
+	Send(uint32, any) error
 
-	Serve(handler MessageHandler) error
+	Serve(MessageHandleFunc) error
 }

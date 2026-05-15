@@ -114,13 +114,13 @@ func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandler) 
 	this.heartbeatHandler = handler
 }
 
-func (this *HeartbeatServer) HandleHeartbeat() (uint32, transport.MessageHandler) {
-	return this.GetOption().Command, transport.MessageHandleFunc(func(conn transport.Conn, msg transport.Message) {
+func (this *HeartbeatServer) HandleHeartbeat() (uint32, transport.MessageHandleFunc) {
+	return this.GetOption().Command, func(conn transport.Conn, msg transport.Message) {
 		this.Add(conn)
 		if this.heartbeatHandler != nil {
 			this.heartbeatHandler.Handle(conn, msg)
 		} else {
 			_ = conn.Send(msg.Command(), nil)
 		}
-	})
+	}
 }

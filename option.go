@@ -60,7 +60,7 @@ func (opt Option) reflectSetOption(name string, sv reflect.Value, st reflect.Typ
 		case ft.Implements(serverType):
 			var tags = strings.Split(sf.Tag.Get("server"), ",")
 			componentName = tags[0]
-		case ft.Implements(serverType):
+		case ft.Implements(clientType):
 			var tags = strings.Split(sf.Tag.Get("client"), ",")
 			componentName = tags[0]
 		default:

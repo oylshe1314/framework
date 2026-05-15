@@ -89,12 +89,17 @@ func (this *NetClient) Read() (transport.Message, error) {
 	return this.conn.Read()
 }
 
-func (this *NetClient) Write(cmd uint32, v any) error {
-	return this.conn.Send(cmd, v)
+func (this *NetClient) Send(command uint32, v any) error {
+	return this.conn.Send(command, v)
 }
 
 func (this *NetClient) work() error {
-	return this.conn.Serve(transport.MessageHandleFunc(this.mux.HandleMessage))
+	if this.conn == nil {
+		if err := this.Dial(); err != nil {
+			return err
+		}
+	}
+	return this.conn.Serve(this.mux.HandleMessage)
 }
 
 func (this *NetClient) Work() error {
@@ -109,10 +114,10 @@ func (this *NetClient) DisconnectHandler(handler func(transport.Conn)) {
 	this.mux.DisconnectHandler(handler)
 }
 
-func (this *NetClient) DefaultHandler(handler transport.MessageHandler) {
+func (this *NetClient) DefaultHandler(handler transport.MessageHandleFunc) {
 	this.mux.DefaultHandler(handler)
 }
 
-func (this *NetClient) MessageHandler(cmd uint32, handler transport.MessageHandler) {
-	this.mux.MessageHandler(cmd, handler)
+func (this *NetClient) MessageHandler(command uint32, handler transport.MessageHandleFunc) {
+	this.mux.MessageHandler(command, handler)
 }
