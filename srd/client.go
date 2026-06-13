@@ -1,4 +1,4 @@
 package srd
 
-type client struct {
-}
+//type client struct {
+//}
