@@ -11,21 +11,24 @@ import (
 
 type zeroEntry struct {
 	zl *zerolog.Logger
-
 	fl *fieldLogger
 }
 
 func (this *zeroEntry) log(event *zerolog.Event, msg string) {
 	if this.fl != nil {
-		for name, value := range this.fl.fields {
-			event = event.Any(name, value)
+		for _, it := range this.fl.fields {
+			event = event.Any(it.name, it.value)
 		}
 	}
 	event.Msg(msg)
 }
 
 func (this *zeroEntry) WithField(name string, value any) entry {
-	this.fl.fields[name] = value
+	if this.fl == nil {
+		this.fl = &fieldLogger{entry: this, fields: []*field{{name: name, value: value}}}
+	} else {
+		this.fl.WithField(name, value)
+	}
 	return this
 }
 
@@ -91,66 +94,21 @@ type zeroLogger struct {
 	writer io.Writer
 
 	zl zerolog.Logger
-
-	options map[string]any
 }
 
-type zeroOption func(*zeroLogger)
-
-func zeroWithWithConsole() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["withConsole"] = true
-	}
-}
-
-func zeroWithTime() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["time"] = true
-	}
-}
-
-func zeroWithTimezone(timezone string) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["timezone"] = timezone
-	}
-}
-
-func zeroWithTimeFormat(timeFormat string) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["timeFormat"] = timeFormat
-	}
-}
-
-func zeroWithCaller() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["caller"] = true
-	}
-}
-
-func zeroWithCallerSkip(callerSkip int) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["callerSkip"] = callerSkip
-	}
-}
-
-func newZeroLogger(level Level, writer io.Writer, options ...zeroOption) (Logger, error) {
-	var zl = &zeroLogger{}
-	for _, option := range options {
-		option(zl)
-	}
-
-	zl.leveledLogger = &leveledLogger{level: level}
+func newZeroLogger(writer io.Writer, option *Option) (Logger, error) {
+	var zl = &zeroLogger{leveledLogger: &leveledLogger{level: ParseLevel(option.Level)}}
 
 	zl.writer = writer
-	if _, ok := zl.options["withConsole"]; ok {
+	if option.WithConsole {
 		zl.writer = io.MultiWriter(os.Stdout, zl.writer)
 	}
 
 	zl.zl = zerolog.New(zl.writer)
-	if _, ok := zl.options["time"]; ok {
+	if option.WithTimestamp {
 		zl.zl = zl.zl.With().Timestamp().Logger()
-		if timezone, ok := zl.options["timezone"].(string); ok && timezone != "" {
-			location, err := time.LoadLocation(timezone)
+		if option.Timezone != "" {
+			location, err := time.LoadLocation(option.Timezone)
 			if err != nil {
 				return nil, err
 			}
@@ -160,17 +118,13 @@ func newZeroLogger(level Level, writer io.Writer, options ...zeroOption) (Logger
 			}
 		}
 
-		if timeFormat, ok := zl.options["timeFormat"].(string); ok && timeFormat != "" {
-			zerolog.TimeFieldFormat = timeFormat
+		if option.TimeFormat != "" {
+			zerolog.TimeFieldFormat = option.TimeFormat
 		}
 	}
 
-	if _, ok := zl.options["caller"]; ok {
-		if callerSkip, ok := zl.options["callerSkip"].(int); ok && callerSkip > 0 {
-			zl.zl = zl.zl.With().CallerWithSkipFrameCount(callerSkip).Logger()
-		} else {
-			zl.zl = zl.zl.With().Caller().Logger()
-		}
+	if option.WithCaller {
+		zl.zl = zl.zl.With().CallerWithSkipFrameCount(4).Logger()
 	}
 
 	return zl, nil
@@ -189,7 +143,7 @@ func (this *zeroLogger) entry() *zeroEntry {
 
 func (this *zeroLogger) WithField(name string, value any) entry {
 	var ze = this.entry()
-	ze.fl = &fieldLogger{entry: ze, fields: map[string]any{name: value}}
+	ze.fl = &fieldLogger{entry: ze, fields: []*field{{name: name, value: value}}}
 	return ze
 }
 

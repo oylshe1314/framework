@@ -7,7 +7,8 @@ import (
 type Level int
 
 const (
-	LevelPanic Level = iota
+	LevelNone Level = iota
+	LevelPanic
 	LevelFatal
 	LevelError
 	LevelWarn

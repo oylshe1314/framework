@@ -1,6 +1,10 @@
 package log
 
-import "io"
+import (
+	"io"
+
+	"github.com/oylshe1314/framework/errors"
+)
 
 type basic interface {
 	Panic(args ...any)
@@ -52,31 +56,13 @@ type Logger interface {
 func NewLogger(writer io.Writer, option *Option) (Logger, error) {
 	switch option.Logger {
 	case "zerolog":
-		var options []zeroOption
-		if option.WithConsole {
-			options = append(options, zeroWithWithConsole())
-		}
-		if option.WithTime {
-			options = append(options, zeroWithTime())
-			if len(option.Timezone) > 0 {
-				options = append(options, zeroWithTimezone(option.Timezone))
-			}
-			if len(option.TimeFormat) > 0 {
-				options = append(options, zeroWithTimeFormat(option.TimeFormat))
-			}
-		}
-		if option.WithCaller {
-			options = append(options, zeroWithCaller())
-			if option.CallerSkip > 0 {
-				options = append(options, zeroWithCallerSkip(option.CallerSkip))
-			}
-		}
-
-		return newZeroLogger(ParseLevel(option.Level), writer, options...)
+		return newZeroLogger(writer, option)
 	case "zap":
 		return newZapLogger()
+	case "logrus":
+		return newLogrusLogger(writer, option)
 	default:
-		return newLogrusLogger()
+		return nil, errors.Errorf("unknown logger type '%s'", option.Logger)
 	}
 }
 

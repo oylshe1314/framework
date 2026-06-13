@@ -2,8 +2,9 @@ package jsonx
 
 import (
 	"encoding/json"
-	"github.com/oylshe1314/framework/util"
 	"testing"
+
+	"github.com/oylshe1314/framework/util"
 )
 
 type AT struct {

@@ -1,9 +1,10 @@
 package option
 
 import (
-	"github.com/oylshe1314/framework/errors"
 	"net/url"
 	"strings"
+
+	"github.com/oylshe1314/framework/errors"
 )
 
 type FlagOption Option
