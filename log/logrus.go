@@ -1,23 +1,31 @@
 package log
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
 )
 
 type logrusEntry struct {
-	lv logrus.Level
 	ll *logrus.Logger
 	fl *fieldLogger
 }
 
-func (this *logrusEntry) log(msg string) {
+func (this *logrusEntry) logrusLog(level logrus.Level, msg string) {
 	var le = logrus.NewEntry(this.ll)
 	if this.fl != nil && len(this.fl.fields) != 0 {
 		le.Data["fields"] = this.fl.fields
 	}
-	this.ll.Logln(this.lv, msg)
+	this.ll.Logln(level, msg)
+}
+
+func (this *logrusEntry) log(level Level, args ...any) {
+	this.logrusLog(level.logrusLevel(), fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) logf(level Level, format string, args ...any) {
+	this.logrusLog(level.logrusLevel(), fmt.Sprintf(format, args...))
 }
 
 func (this *logrusEntry) WithField(name string, value any) entry {
@@ -27,62 +35,6 @@ func (this *logrusEntry) WithField(name string, value any) entry {
 		this.fl.WithField(name, value)
 	}
 	return this
-}
-
-func (this *logrusEntry) Panic(args ...any) {
-
-}
-
-func (this *logrusEntry) Panicf(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Fatal(args ...any) {
-
-}
-
-func (this *logrusEntry) Fatalf(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Error(args ...any) {
-
-}
-
-func (this *logrusEntry) Errorf(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Warn(args ...any) {
-
-}
-
-func (this *logrusEntry) Warnf(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Info(args ...any) {
-
-}
-
-func (this *logrusEntry) Infof(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Debug(args ...any) {
-
-}
-
-func (this *logrusEntry) Debugf(format string, args ...any) {
-
-}
-
-func (this *logrusEntry) Trace(args ...any) {
-
-}
-
-func (this *logrusEntry) Tracef(format string, args ...any) {
-
 }
 
 type logrusLogger struct {
@@ -102,6 +54,13 @@ func newLogrusLogger(writer io.Writer, option *Option) (Logger, error) {
 		ll.ll.AddHook(&logrusConsoleHook{})
 	}
 
+	var l = logrus.New()
+
+	l.SetOutput(ll.writer)
+	l.SetReportCaller(option.WithCaller)
+	l.SetLevel(ll.level.logrusLevel())
+	l.SetFormatter(&logrusJsonFormatter{option: option})
+
 	return ll, nil
 }
 
@@ -113,11 +72,7 @@ func (this *logrusLogger) Close() error {
 }
 
 func (this *logrusLogger) entry() *logrusEntry {
-	lv, err := logrus.ParseLevel(this.level.String())
-	if err != nil {
-		lv = logrus.InfoLevel
-	}
-	return &logrusEntry{lv: lv, ll: this.ll}
+	return &logrusEntry{ll: this.ll}
 }
 
 func (this *logrusLogger) WithField(name string, value any) entry {
@@ -127,57 +82,57 @@ func (this *logrusLogger) WithField(name string, value any) entry {
 }
 
 func (this *logrusLogger) Panic(args ...any) {
-
+	this.entry().log(LevelPanic, args)
 }
 
 func (this *logrusLogger) Panicf(format string, args ...any) {
-
+	this.entry().logf(LevelPanic, format, args)
 }
 
 func (this *logrusLogger) Fatal(args ...any) {
-
+	this.entry().log(LevelFatal, args)
 }
 
 func (this *logrusLogger) Fatalf(format string, args ...any) {
-
+	this.entry().logf(LevelFatal, format, args)
 }
 
 func (this *logrusLogger) Error(args ...any) {
-
+	this.entry().log(LevelError, args)
 }
 
 func (this *logrusLogger) Errorf(format string, args ...any) {
-
+	this.entry().logf(LevelError, format, args)
 }
 
 func (this *logrusLogger) Warn(args ...any) {
-
+	this.entry().log(LevelWarn, args)
 }
 
 func (this *logrusLogger) Warnf(format string, args ...any) {
-
+	this.entry().logf(LevelWarn, format, args)
 }
 
 func (this *logrusLogger) Info(args ...any) {
-
+	this.entry().log(LevelInfo, args)
 }
 
 func (this *logrusLogger) Infof(format string, args ...any) {
-
+	this.entry().logf(LevelInfo, format, args)
 }
 
 func (this *logrusLogger) Debug(args ...any) {
-
+	this.entry().log(LevelDebug, args)
 }
 
 func (this *logrusLogger) Debugf(format string, args ...any) {
-
+	this.entry().logf(LevelDebug, format, args)
 }
 
 func (this *logrusLogger) Trace(args ...any) {
-
+	this.entry().log(LevelTrace, args)
 }
 
 func (this *logrusLogger) Tracef(format string, args ...any) {
-
+	this.entry().logf(LevelTrace, format, args)
 }
