@@ -1,9 +1,10 @@
 package util
 
 import (
-	"github.com/oylshe1314/framework/errors"
 	"strconv"
 	"strings"
+
+	"github.com/oylshe1314/framework/errors"
 )
 
 type Integer interface {

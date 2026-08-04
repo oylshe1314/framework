@@ -6,7 +6,11 @@ import (
 )
 
 func TestNewZeroLogger(t *testing.T) {
-	var logger, err = newZeroLogger(LevelDebug, os.Stdout)
+	var logger, err = newZeroLogger(os.Stdout, &Option{
+		WithTimestamp: true,
+		TimeFormat:    "2006-01-02 15:04:05",
+		WithCaller:    true,
+	})
 	if err != nil {
 		t.Error(err)
 		return

@@ -2,12 +2,17 @@ package log
 
 import (
 	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/zap/zapcore"
 )
 
 type Level int
 
 const (
-	LevelPanic Level = iota
+	LevelNone Level = iota
+	LevelPanic
 	LevelFatal
 	LevelError
 	LevelWarn
@@ -65,6 +70,69 @@ func ParseLevel(level string) Level {
 		return LevelTrace
 	default:
 		return LevelInfo
+	}
+}
+
+func (level Level) logrusLevel() logrus.Level {
+	switch level {
+	case LevelPanic:
+		return logrus.PanicLevel
+	case LevelFatal:
+		return logrus.FatalLevel
+	case LevelError:
+		return logrus.ErrorLevel
+	case LevelWarn:
+		return logrus.WarnLevel
+	case LevelInfo:
+		return logrus.InfoLevel
+	case LevelDebug:
+		return logrus.DebugLevel
+	case LevelTrace:
+		return logrus.TraceLevel
+	default:
+		return logrus.InfoLevel
+	}
+}
+
+func (level Level) zeroLevel() zerolog.Level {
+	switch level {
+	case LevelPanic:
+		return zerolog.PanicLevel
+	case LevelFatal:
+		return zerolog.FatalLevel
+	case LevelError:
+		return zerolog.ErrorLevel
+	case LevelWarn:
+		return zerolog.WarnLevel
+	case LevelInfo:
+		return zerolog.InfoLevel
+	case LevelDebug:
+		return zerolog.DebugLevel
+	case LevelTrace:
+		return zerolog.TraceLevel
+	default:
+		return zerolog.InfoLevel
+	}
+}
+
+func (level Level) zapLevel() zapcore.Level {
+	switch level {
+	case LevelPanic:
+		return zapcore.PanicLevel
+	case LevelFatal:
+		return zapcore.FatalLevel
+	case LevelError:
+		return zapcore.ErrorLevel
+	case LevelWarn:
+		return zapcore.WarnLevel
+	case LevelInfo:
+		return zapcore.InfoLevel
+	case LevelDebug:
+		return zapcore.DebugLevel
+	case LevelTrace:
+		return zapcore.DebugLevel
+	default:
+		return zapcore.InfoLevel
 	}
 }
 

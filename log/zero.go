@@ -11,78 +11,54 @@ import (
 
 type zeroEntry struct {
 	zl *zerolog.Logger
-
 	fl *fieldLogger
 }
 
-func (this *zeroEntry) log(event *zerolog.Event, msg string) {
+func (this *zeroEntry) zeroLog(event *zerolog.Event, msg string) {
 	if this.fl != nil {
-		for name, value := range this.fl.fields {
-			event = event.Any(name, value)
+		for _, it := range this.fl.fields {
+			event = event.Any(it.name, it.value)
 		}
 	}
 	event.Msg(msg)
 }
 
+func (this *zeroEntry) zeroEvent(level Level) *zerolog.Event {
+	switch level {
+	case LevelPanic:
+		return this.zl.Panic()
+	case LevelFatal:
+		return this.zl.Fatal()
+	case LevelError:
+		return this.zl.Error()
+	case LevelWarn:
+		return this.zl.Warn()
+	case LevelInfo:
+		return this.zl.Info()
+	case LevelDebug:
+		return this.zl.Debug()
+	case LevelTrace:
+		return this.zl.Trace()
+	default:
+		return this.zl.Info()
+	}
+}
+
+func (this *zeroEntry) log(level Level, args ...any) {
+	this.zeroLog(this.zeroEvent(level), fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) logf(level Level, format string, args ...any) {
+	this.zeroLog(this.zeroEvent(level), fmt.Sprintf(format, args...))
+}
+
 func (this *zeroEntry) WithField(name string, value any) entry {
-	this.fl.fields[name] = value
+	if this.fl == nil {
+		this.fl = &fieldLogger{entry: this, fields: []*field{{name: name, value: value}}}
+	} else {
+		this.fl.WithField(name, value)
+	}
 	return this
-}
-
-func (this *zeroEntry) Panic(args ...any) {
-	this.log(this.zl.Panic(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Panicf(format string, args ...any) {
-	this.log(this.zl.Panic(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Fatal(args ...any) {
-	this.log(this.zl.Fatal(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Fatalf(format string, args ...any) {
-	this.log(this.zl.Fatal(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Error(args ...any) {
-	this.log(this.zl.Error(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Errorf(format string, args ...any) {
-	this.log(this.zl.Error(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Warn(args ...any) {
-	this.log(this.zl.Warn(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Warnf(format string, args ...any) {
-	this.log(this.zl.Warn(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Info(args ...any) {
-	this.log(this.zl.Info(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Infof(format string, args ...any) {
-	this.log(this.zl.Info(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Debug(args ...any) {
-	this.log(this.zl.Debug(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Debugf(format string, args ...any) {
-	this.log(this.zl.Debug(), fmt.Sprintf(format, args...))
-}
-
-func (this *zeroEntry) Trace(args ...any) {
-	this.log(this.zl.Trace(), fmt.Sprint(args...))
-}
-
-func (this *zeroEntry) Tracef(format string, args ...any) {
-	this.log(this.zl.Trace(), fmt.Sprintf(format, args...))
 }
 
 type zeroLogger struct {
@@ -91,66 +67,21 @@ type zeroLogger struct {
 	writer io.Writer
 
 	zl zerolog.Logger
-
-	options map[string]any
 }
 
-type zeroOption func(*zeroLogger)
-
-func zeroWithWithConsole() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["withConsole"] = true
-	}
-}
-
-func zeroWithTime() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["time"] = true
-	}
-}
-
-func zeroWithTimezone(timezone string) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["timezone"] = timezone
-	}
-}
-
-func zeroWithTimeFormat(timeFormat string) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["timeFormat"] = timeFormat
-	}
-}
-
-func zeroWithCaller() zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["caller"] = true
-	}
-}
-
-func zeroWithCallerSkip(callerSkip int) zeroOption {
-	return func(zl *zeroLogger) {
-		zl.options["callerSkip"] = callerSkip
-	}
-}
-
-func newZeroLogger(level Level, writer io.Writer, options ...zeroOption) (Logger, error) {
-	var zl = &zeroLogger{}
-	for _, option := range options {
-		option(zl)
-	}
-
-	zl.leveledLogger = &leveledLogger{level: level}
+func newZeroLogger(writer io.Writer, option *Option) (Logger, error) {
+	var zl = &zeroLogger{leveledLogger: &leveledLogger{level: ParseLevel(option.Level)}}
 
 	zl.writer = writer
-	if _, ok := zl.options["withConsole"]; ok {
+	if option.WithConsole {
 		zl.writer = io.MultiWriter(os.Stdout, zl.writer)
 	}
 
 	zl.zl = zerolog.New(zl.writer)
-	if _, ok := zl.options["time"]; ok {
+	if option.WithTimestamp {
 		zl.zl = zl.zl.With().Timestamp().Logger()
-		if timezone, ok := zl.options["timezone"].(string); ok && timezone != "" {
-			location, err := time.LoadLocation(timezone)
+		if option.Timezone != "" {
+			location, err := time.LoadLocation(option.Timezone)
 			if err != nil {
 				return nil, err
 			}
@@ -160,17 +91,13 @@ func newZeroLogger(level Level, writer io.Writer, options ...zeroOption) (Logger
 			}
 		}
 
-		if timeFormat, ok := zl.options["timeFormat"].(string); ok && timeFormat != "" {
-			zerolog.TimeFieldFormat = timeFormat
+		if option.TimeFormat != "" {
+			zerolog.TimeFieldFormat = option.TimeFormat
 		}
 	}
 
-	if _, ok := zl.options["caller"]; ok {
-		if callerSkip, ok := zl.options["callerSkip"].(int); ok && callerSkip > 0 {
-			zl.zl = zl.zl.With().CallerWithSkipFrameCount(callerSkip).Logger()
-		} else {
-			zl.zl = zl.zl.With().Caller().Logger()
-		}
+	if option.WithCaller {
+		zl.zl = zl.zl.With().CallerWithSkipFrameCount(4).Logger()
 	}
 
 	return zl, nil
@@ -189,62 +116,62 @@ func (this *zeroLogger) entry() *zeroEntry {
 
 func (this *zeroLogger) WithField(name string, value any) entry {
 	var ze = this.entry()
-	ze.fl = &fieldLogger{entry: ze, fields: map[string]any{name: value}}
+	ze.fl = &fieldLogger{entry: ze, fields: []*field{{name: name, value: value}}}
 	return ze
 }
 
 func (this *zeroLogger) Panic(args ...any) {
-	this.entry().Panic(args...)
+	this.entry().log(LevelPanic, args...)
 }
 
 func (this *zeroLogger) Panicf(format string, args ...any) {
-	this.entry().Panicf(format, args...)
+	this.entry().logf(LevelPanic, format, args...)
 }
 
 func (this *zeroLogger) Fatal(args ...any) {
-	this.entry().Fatal(args...)
+	this.entry().log(LevelFatal, args...)
 }
 
 func (this *zeroLogger) Fatalf(format string, args ...any) {
-	this.entry().Fatalf(format, args...)
+	this.entry().logf(LevelFatal, format, args...)
 }
 
 func (this *zeroLogger) Error(args ...any) {
-	this.entry().Error(args...)
+	this.entry().log(LevelError, args...)
 }
 
 func (this *zeroLogger) Errorf(format string, args ...any) {
-	this.entry().Errorf(format, args...)
+	this.entry().logf(LevelError, format, args...)
 }
 
 func (this *zeroLogger) Warn(args ...any) {
-	this.entry().Warn(args...)
+	this.entry().log(LevelWarn, args...)
 }
 
 func (this *zeroLogger) Warnf(format string, args ...any) {
-	this.entry().Warnf(format, args...)
+	this.entry().logf(LevelWarn, format, args...)
 }
 
 func (this *zeroLogger) Info(args ...any) {
-	this.entry().Info(args...)
+	this.entry().log(LevelInfo, args...)
 }
 
 func (this *zeroLogger) Infof(format string, args ...any) {
-	this.entry().Infof(format, args...)
+	this.entry().logf(LevelInfo, format, args...)
 }
 
 func (this *zeroLogger) Debug(args ...any) {
-	this.entry().Debug(args...)
+	this.entry().log(LevelDebug, args...)
 }
 
 func (this *zeroLogger) Debugf(format string, args ...any) {
-	this.entry().Debugf(format, args...)
+	this.entry().logf(LevelDebug, format, args...)
 }
 
 func (this *zeroLogger) Trace(args ...any) {
-	this.entry().Trace(args...)
+	this.entry().log(LevelTrace, args...)
 }
 
 func (this *zeroLogger) Tracef(format string, args ...any) {
-	this.entry().Tracef(format, args...)
+	this.entry().logf(LevelTrace, format, args...)
 }
