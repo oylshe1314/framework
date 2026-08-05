@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/oylshe1314/framework/store"
 	"github.com/sirupsen/logrus"
 )
 
 type logrusEntry struct {
 	ll *logrus.Logger
-	fl *fieldLogger
+
+	fields []*store.Pair[string, any]
 }
 
 func (this *logrusEntry) logrusLog(level logrus.Level, msg string) {
 	var le = logrus.NewEntry(this.ll)
-	if this.fl != nil && len(this.fl.fields) != 0 {
-		le.Data["fields"] = this.fl.fields
+	if len(this.fields) != 0 {
+		le.Data["fields"] = this.fields
 	}
-	this.ll.Logln(level, msg)
+	le.Logln(level, msg)
 }
 
 func (this *logrusEntry) log(level Level, args ...any) {
@@ -29,12 +31,64 @@ func (this *logrusEntry) logf(level Level, format string, args ...any) {
 }
 
 func (this *logrusEntry) WithField(name string, value any) entry {
-	if this.fl == nil {
-		this.fl = &fieldLogger{entry: this, fields: []*field{{name: name, value: value}}}
-	} else {
-		this.fl.WithField(name, value)
-	}
+	this.fields = append(this.fields, store.NewPair[string, any](name, value))
 	return this
+}
+
+func (this *logrusEntry) Panic(args ...any) {
+	this.log(LevelPanic, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Panicf(format string, args ...any) {
+	this.log(LevelPanic, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Fatal(args ...any) {
+	this.log(LevelFatal, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Fatalf(format string, args ...any) {
+	this.log(LevelFatal, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Error(args ...any) {
+	this.log(LevelError, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Errorf(format string, args ...any) {
+	this.log(LevelError, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Warn(args ...any) {
+	this.log(LevelWarn, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Warnf(format string, args ...any) {
+	this.log(LevelWarn, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Info(args ...any) {
+	this.log(LevelInfo, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Infof(format string, args ...any) {
+	this.log(LevelInfo, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Debug(args ...any) {
+	this.log(LevelDebug, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Debugf(format string, args ...any) {
+	this.log(LevelDebug, fmt.Sprintf(format, args...))
+}
+
+func (this *logrusEntry) Trace(args ...any) {
+	this.log(LevelTrace, fmt.Sprint(args...))
+}
+
+func (this *logrusEntry) Tracef(format string, args ...any) {
+	this.log(LevelTrace, fmt.Sprintf(format, args...))
 }
 
 type logrusLogger struct {
@@ -54,12 +108,12 @@ func newLogrusLogger(writer io.Writer, option *Option) (Logger, error) {
 		ll.ll.AddHook(&logrusConsoleHook{})
 	}
 
-	var l = logrus.New()
+	ll.ll = logrus.New()
 
-	l.SetOutput(ll.writer)
-	l.SetReportCaller(option.WithCaller)
-	l.SetLevel(ll.level.logrusLevel())
-	l.SetFormatter(&logrusJsonFormatter{option: option})
+	ll.ll.SetOutput(ll.writer)
+	ll.ll.SetReportCaller(false)
+	ll.ll.SetLevel(ll.level.logrusLevel())
+	ll.ll.SetFormatter(&logrusJsonFormatter{option: option})
 
 	return ll, nil
 }
@@ -76,63 +130,63 @@ func (this *logrusLogger) entry() *logrusEntry {
 }
 
 func (this *logrusLogger) WithField(name string, value any) entry {
-	var ze = this.entry()
-	ze.fl = &fieldLogger{entry: ze, fields: []*field{{name: name, value: value}}}
-	return ze
+	var le = this.entry()
+	le.WithField(name, value)
+	return le
 }
 
 func (this *logrusLogger) Panic(args ...any) {
-	this.entry().log(LevelPanic, args)
+	this.entry().log(LevelPanic, args...)
 }
 
 func (this *logrusLogger) Panicf(format string, args ...any) {
-	this.entry().logf(LevelPanic, format, args)
+	this.entry().logf(LevelPanic, format, args...)
 }
 
 func (this *logrusLogger) Fatal(args ...any) {
-	this.entry().log(LevelFatal, args)
+	this.entry().log(LevelFatal, args...)
 }
 
 func (this *logrusLogger) Fatalf(format string, args ...any) {
-	this.entry().logf(LevelFatal, format, args)
+	this.entry().logf(LevelFatal, format, args...)
 }
 
 func (this *logrusLogger) Error(args ...any) {
-	this.entry().log(LevelError, args)
+	this.entry().log(LevelError, args...)
 }
 
 func (this *logrusLogger) Errorf(format string, args ...any) {
-	this.entry().logf(LevelError, format, args)
+	this.entry().logf(LevelError, format, args...)
 }
 
 func (this *logrusLogger) Warn(args ...any) {
-	this.entry().log(LevelWarn, args)
+	this.entry().log(LevelWarn, args...)
 }
 
 func (this *logrusLogger) Warnf(format string, args ...any) {
-	this.entry().logf(LevelWarn, format, args)
+	this.entry().logf(LevelWarn, format, args...)
 }
 
 func (this *logrusLogger) Info(args ...any) {
-	this.entry().log(LevelInfo, args)
+	this.entry().log(LevelInfo, args...)
 }
 
 func (this *logrusLogger) Infof(format string, args ...any) {
-	this.entry().logf(LevelInfo, format, args)
+	this.entry().logf(LevelInfo, format, args...)
 }
 
 func (this *logrusLogger) Debug(args ...any) {
-	this.entry().log(LevelDebug, args)
+	this.entry().log(LevelDebug, args...)
 }
 
 func (this *logrusLogger) Debugf(format string, args ...any) {
-	this.entry().logf(LevelDebug, format, args)
+	this.entry().logf(LevelDebug, format, args...)
 }
 
 func (this *logrusLogger) Trace(args ...any) {
-	this.entry().log(LevelTrace, args)
+	this.entry().log(LevelTrace, args...)
 }
 
 func (this *logrusLogger) Tracef(format string, args ...any) {
-	this.entry().logf(LevelTrace, format, args)
+	this.entry().logf(LevelTrace, format, args...)
 }

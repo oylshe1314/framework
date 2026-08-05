@@ -3,8 +3,10 @@ package log
 import (
 	"bytes"
 	"fmt"
-	"strings"
+	"runtime"
+	"time"
 
+	"github.com/oylshe1314/framework/store"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,12 +14,42 @@ type logrusJsonFormatter struct {
 	option *Option
 }
 
-func (this *logrusJsonFormatter) relativePath(file string) string {
-	var p = strings.Index(file, "ecs/")
-	if p >= 0 {
-		return file[p+4:]
+func (this *logrusJsonFormatter) writeJson(buffer *bytes.Buffer, fields []*store.Pair[string, any]) {
+	buffer.WriteString("{")
+	buffer.WriteString("\"")
+	buffer.WriteString(fields[0].Key)
+	buffer.WriteString("\":")
+	switch fields[0].Value.(type) {
+	case string:
+		buffer.WriteString("\"")
+		buffer.WriteString(fields[0].Value.(string))
+		buffer.WriteString("\"")
+	default:
+		buffer.WriteString(fmt.Sprint(fields[0].Value))
 	}
-	return file
+	for _, field := range fields[1:] {
+		buffer.WriteString(",")
+		buffer.WriteString("\"")
+		buffer.WriteString(field.Key)
+		buffer.WriteString("\":")
+		switch field.Value.(type) {
+		case string:
+			buffer.WriteString("\"")
+			buffer.WriteString(field.Value.(string))
+			buffer.WriteString("\"")
+		default:
+			buffer.WriteString(fmt.Sprint(field.Value))
+		}
+	}
+	buffer.WriteString("}\r\n")
+}
+
+func (this *logrusJsonFormatter) getCaller() *runtime.Frame {
+	pcs := make([]uintptr, 32)
+	depth := runtime.Callers(10, pcs)
+	frames := runtime.CallersFrames(pcs[:depth])
+	frame, _ := frames.Next()
+	return &frame
 }
 
 func (this *logrusJsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -26,24 +58,27 @@ func (this *logrusJsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		buffer = &bytes.Buffer{}
 	}
 
-	var strLv = strings.ToUpper(entry.Level.String())
-	switch strLv {
-	case "WARNING":
-		strLv = "WARN"
-	case "UNKNOWN":
-		strLv = "INFO"
+	var caller = this.getCaller()
+
+	var fields = []*store.Pair[string, any]{
+		store.NewPair[string, any]("level", entry.Level.String()),
+		store.NewPair[string, any]("message", entry.Message),
 	}
 
-	buffer.WriteString("[")
-	buffer.WriteString(entry.Time.Format("2006-01-02 15:04:05"))
-	buffer.WriteString(" ")
-	buffer.WriteString(fmt.Sprintf("%5s", strLv))
-	buffer.WriteString("] ")
-	buffer.WriteString(fmt.Sprintf("%-47s # ", fmt.Sprintf("%s:%d", this.relativePath(entry.Caller.File), entry.Caller.Line)))
-	buffer.WriteString(entry.Message)
-	if buffer.Bytes()[buffer.Len()-1] != '\n' {
-		buffer.WriteByte('\n')
+	if this.option.WithTimestamp {
+		var timeFormat = this.option.TimeFormat
+		if timeFormat == "" {
+			timeFormat = time.RFC3339
+		}
+		fields = append(fields, store.NewPair[string, any]("time", entry.Time.Format(timeFormat)))
 	}
+	if this.option.WithCaller {
+		fields = append(fields, store.NewPair[string, any]("caller", fmt.Sprint(caller.File, ":", caller.Line)))
+	}
+
+	fields = append(fields, entry.Data["fields"].([]*store.Pair[string, any])...)
+
+	this.writeJson(buffer, fields)
 
 	return buffer.Bytes(), nil
 }

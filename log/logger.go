@@ -41,7 +41,7 @@ type leveled interface {
 }
 
 type entry interface {
-	//basic
+	basic
 
 	WithField(key string, value any) entry
 }
@@ -58,7 +58,7 @@ func NewLogger(writer io.Writer, option *Option) (Logger, error) {
 	case "logrus":
 		return newLogrusLogger(writer, option)
 	case "zap":
-		return newZapLogger()
+		return newZapLogger(writer, option)
 	case "zerolog":
 		return newZeroLogger(writer, option)
 	default:

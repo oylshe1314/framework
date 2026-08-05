@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func TestNewZeroLogger(t *testing.T) {
-	var logger, err = newZeroLogger(os.Stdout, &Option{
+func TestNewZapLogger(t *testing.T) {
+	var logger, err = newZapLogger(os.Stdout, &Option{
 		Level:         TraceString,
 		WithTimestamp: true,
 		TimeFormat:    time.DateTime,

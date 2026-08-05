@@ -6,19 +6,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/oylshe1314/framework/store"
 	"github.com/rs/zerolog"
 )
 
 type zeroEntry struct {
 	zl *zerolog.Logger
-	fl *fieldLogger
+
+	fields []*store.Pair[string, any]
 }
 
 func (this *zeroEntry) zeroLog(event *zerolog.Event, msg string) {
-	if this.fl != nil {
-		for _, it := range this.fl.fields {
-			event = event.Any(it.name, it.value)
-		}
+	for _, field := range this.fields {
+		event = event.Any(field.Key, field.Value)
 	}
 	event.Msg(msg)
 }
@@ -53,12 +53,64 @@ func (this *zeroEntry) logf(level Level, format string, args ...any) {
 }
 
 func (this *zeroEntry) WithField(name string, value any) entry {
-	if this.fl == nil {
-		this.fl = &fieldLogger{entry: this, fields: []*field{{name: name, value: value}}}
-	} else {
-		this.fl.WithField(name, value)
-	}
+	this.fields = append(this.fields, store.NewPair[string, any](name, value))
 	return this
+}
+
+func (this *zeroEntry) Panic(args ...any) {
+	this.log(LevelPanic, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Panicf(format string, args ...any) {
+	this.log(LevelPanic, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Fatal(args ...any) {
+	this.log(LevelFatal, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Fatalf(format string, args ...any) {
+	this.log(LevelFatal, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Error(args ...any) {
+	this.log(LevelError, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Errorf(format string, args ...any) {
+	this.log(LevelError, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Warn(args ...any) {
+	this.log(LevelWarn, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Warnf(format string, args ...any) {
+	this.log(LevelWarn, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Info(args ...any) {
+	this.log(LevelInfo, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Infof(format string, args ...any) {
+	this.log(LevelInfo, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Debug(args ...any) {
+	this.log(LevelDebug, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Debugf(format string, args ...any) {
+	this.log(LevelDebug, fmt.Sprintf(format, args...))
+}
+
+func (this *zeroEntry) Trace(args ...any) {
+	this.log(LevelTrace, fmt.Sprint(args...))
+}
+
+func (this *zeroEntry) Tracef(format string, args ...any) {
+	this.log(LevelTrace, fmt.Sprintf(format, args...))
 }
 
 type zeroLogger struct {
@@ -93,11 +145,13 @@ func newZeroLogger(writer io.Writer, option *Option) (Logger, error) {
 
 		if option.TimeFormat != "" {
 			zerolog.TimeFieldFormat = option.TimeFormat
+		} else {
+			zerolog.TimeFieldFormat = time.RFC3339
 		}
 	}
 
 	if option.WithCaller {
-		zl.zl = zl.zl.With().CallerWithSkipFrameCount(4).Logger()
+		zl.zl = zl.zl.With().CallerWithSkipFrameCount(5).Logger()
 	}
 
 	return zl, nil
@@ -116,62 +170,62 @@ func (this *zeroLogger) entry() *zeroEntry {
 
 func (this *zeroLogger) WithField(name string, value any) entry {
 	var ze = this.entry()
-	ze.fl = &fieldLogger{entry: ze, fields: []*field{{name: name, value: value}}}
+	ze.WithField(name, value)
 	return ze
 }
 
 func (this *zeroLogger) Panic(args ...any) {
-	this.entry().log(LevelPanic, args...)
+	this.entry().Panic(args...)
 }
 
 func (this *zeroLogger) Panicf(format string, args ...any) {
-	this.entry().logf(LevelPanic, format, args...)
+	this.entry().Panicf(format, args...)
 }
 
 func (this *zeroLogger) Fatal(args ...any) {
-	this.entry().log(LevelFatal, args...)
+	this.entry().Fatal(args...)
 }
 
 func (this *zeroLogger) Fatalf(format string, args ...any) {
-	this.entry().logf(LevelFatal, format, args...)
+	this.entry().Fatalf(format, args...)
 }
 
 func (this *zeroLogger) Error(args ...any) {
-	this.entry().log(LevelError, args...)
+	this.entry().Error(args...)
 }
 
 func (this *zeroLogger) Errorf(format string, args ...any) {
-	this.entry().logf(LevelError, format, args...)
+	this.entry().Errorf(format, args...)
 }
 
 func (this *zeroLogger) Warn(args ...any) {
-	this.entry().log(LevelWarn, args...)
+	this.entry().Warn(args...)
 }
 
 func (this *zeroLogger) Warnf(format string, args ...any) {
-	this.entry().logf(LevelWarn, format, args...)
+	this.entry().Warnf(format, args...)
 }
 
 func (this *zeroLogger) Info(args ...any) {
-	this.entry().log(LevelInfo, args...)
+	this.entry().Info(args...)
 }
 
 func (this *zeroLogger) Infof(format string, args ...any) {
-	this.entry().logf(LevelInfo, format, args...)
+	this.entry().Infof(format, args...)
 }
 
 func (this *zeroLogger) Debug(args ...any) {
-	this.entry().log(LevelDebug, args...)
+	this.entry().Debug(args...)
 }
 
 func (this *zeroLogger) Debugf(format string, args ...any) {
-	this.entry().logf(LevelDebug, format, args...)
+	this.entry().Debugf(format, args...)
 }
 
 func (this *zeroLogger) Trace(args ...any) {
-	this.entry().log(LevelTrace, args...)
+	this.entry().Trace(args...)
 }
 
 func (this *zeroLogger) Tracef(format string, args ...any) {
-	this.entry().logf(LevelTrace, format, args...)
+	this.entry().Tracef(format, args...)
 }
