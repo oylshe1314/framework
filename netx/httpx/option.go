@@ -3,7 +3,7 @@ package httpx
 import "github.com/oylshe1314/framework/netx"
 
 type Option struct {
-	netx.Option
+	netx.Option `json:",inline"`
 
 	BasePath string `json:"basePath"`
 	HtmlPath string `json:"htmlPath"`

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	"sync/atomic"
 	"syscall"
@@ -53,7 +52,7 @@ func start(svr server.Server) int {
 	var err error
 	var allHash []string
 
-	allHash, _, err = util.HashAll(md5.New(), true, nil, nil, []string{filepath.Dir(os.Args[0])})
+	allHash, _, err = util.HashAll(md5.New(), true, nil, nil, []string{os.Args[0]})
 	if err != nil {
 		fmt.Println("Calculate program hash failed, ", err)
 		return 1
@@ -70,7 +69,7 @@ func start(svr server.Server) int {
 	opt.Merge(option.Option(flagOption))
 
 	var optStr = opt.String()
-	fmt.Println(optStr)
+	fmt.Print(optStr)
 
 	allHash, _, err = util.HashAll(md5.New(), true, []string{optStr}, nil, nil)
 	if err != nil {
@@ -107,6 +106,7 @@ func run(svr server.Server, opt option.Option) int {
 		time.Sleep(time.Millisecond * 100)
 		err = cc.Init(ctx)
 		if err != nil {
+			fmt.Printf("Server '%s' init failed, %v\n", cc.Name(), err)
 			return 1
 		}
 

@@ -21,10 +21,10 @@ func (opt Option) setOption(optional any) ([]component.Component, error) {
 		return nil, errors.New("server should be a struct pointer")
 	}
 
-	return opt.reflectSetOption(st.Elem().Name(), reflect.ValueOf(optional), st)
+	return opt.reflectSetOption(util.LowerCamelCase(st.Elem().Name()), reflect.ValueOf(optional), st)
 }
 
-func (opt Option) reflectSetOption(name string, sv reflect.Value, st reflect.Type) ([]component.Component, error) {
+func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.Type) ([]component.Component, error) {
 	var err error
 	var cs []component.Component
 
@@ -33,16 +33,16 @@ func (opt Option) reflectSetOption(name string, sv reflect.Value, st reflect.Typ
 
 	var cc component.Component
 	switch {
-	case st.Implements(serverType):
-		cc = server.NewServerComponent(name, sv.Interface().(server.Server))
-	case st.Implements(clientType):
-		cc = client.NewClientComponent(name, sv.Interface().(client.Client))
+	case spt.Implements(serverType):
+		cc = server.NewServerComponent(name, spv.Interface().(server.Server))
+	case spt.Implements(clientType):
+		cc = client.NewClientComponent(name, spv.Interface().(client.Client))
 	default:
 		return nil, errors.New("set option should be a server or a client")
 	}
 
-	st = st.Elem()
-	sv = sv.Elem()
+	var st = spt.Elem()
+	var sv = spv.Elem()
 
 	for i := range st.NumField() {
 		var sf = st.Field(i)
@@ -99,44 +99,43 @@ func (opt Option) reflectSetOption(name string, sv reflect.Value, st reflect.Typ
 		cs = append(cs, scs...)
 	}
 
-	for i := range st.NumMethod() {
-		var sm = st.Method(i)
-		if !sm.IsExported() {
-			continue
-		}
+	st = spt
+	sv = spv
 
-		if sm.Name == "SetOption" {
-			var mt = sm.Type
-			if mt.NumIn() != 1 {
-				return nil, errors.Errorf("invalid parameter of the server '%s' option set funcation", st.Name())
-			}
-
-			var at = mt.In(0)
-			if at.Kind() != reflect.Struct || at.Elem().Kind() != reflect.Struct {
-				return nil, errors.Errorf("the parameter of the server '%s' option set funcation should be a struct or struct pointer", st.Name())
-			}
-
-			if at.Kind() == reflect.Pointer {
-				var av = reflect.New(at.Elem())
-				err = jsonx.Object(opt).ToStruct(av.Interface())
-				if err != nil {
-					return nil, err
-				}
-
-				sv.Method(i).Call([]reflect.Value{av})
-			} else {
-				var av = reflect.New(at)
-				err = jsonx.Object(opt).ToStruct(av.Interface())
-				if err != nil {
-					return nil, err
-				}
-				sv.Method(i).Call([]reflect.Value{av.Elem()})
-			}
-		}
+	sm, ok := st.MethodByName("SetOption")
+	if !ok {
+		st = st.Elem()
+		sv = sv.Elem()
+		sm, ok = st.MethodByName("SetOption")
 	}
 
-	for st.Kind() == reflect.Pointer {
-		st = st.Elem()
+	if ok {
+		var mt = sm.Type
+		if mt.NumIn() != 2 {
+			return nil, errors.Errorf("invalid parameter of the server '%s' option set funcation", st.Name())
+		}
+
+		var at = mt.In(1)
+		if at.Kind() != reflect.Struct && at.Elem().Kind() != reflect.Struct {
+			return nil, errors.Errorf("the parameter of the server '%s' option set funcation should be a struct or struct pointer", st.Name())
+		}
+
+		if at.Kind() == reflect.Pointer {
+			var av = reflect.New(at.Elem())
+			err = jsonx.Object(opt).ToStruct(av.Interface())
+			if err != nil {
+				return nil, err
+			}
+
+			sv.Method(sm.Index).Call([]reflect.Value{av})
+		} else {
+			var av = reflect.New(at)
+			err = jsonx.Object(opt).ToStruct(av.Interface())
+			if err != nil {
+				return nil, err
+			}
+			sv.Method(sm.Index).Call([]reflect.Value{av.Elem()})
+		}
 	}
 
 	cs = append(cs, cc)
