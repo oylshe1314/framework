@@ -12,6 +12,8 @@ type AT struct {
 }
 
 type PAT struct {
+	AT   `json:"at"`
+	*PAT `json:"pat"`
 	Val2 string `json:"val2"`
 }
 
@@ -33,11 +35,11 @@ type TT struct {
 	Int32 int32 `json:"int32"`
 	Int64 int64 `json:"int64"`
 
-	Uint   int   `json:"uint"`
-	Uint8  int8  `json:"uint8"`
-	Uint16 int16 `json:"uint16"`
-	Uint32 int32 `json:"uint32"`
-	Uint64 int64 `json:"uint64"`
+	Uint   uint   `json:"uint"`
+	Uint8  uint8  `json:"uint8"`
+	Uint16 uint16 `json:"uint16"`
+	Uint32 uint32 `json:"uint32"`
+	Uint64 uint64 `json:"uint64"`
 
 	Uintptr uintptr `json:"uintptr"`
 
@@ -157,7 +159,13 @@ func TestObjectRead(t *testing.T) {
     "val1": "str45"
   },
   "pat": {
-    "val2": "str46"
+    "val2": "str46",
+	"at": {
+		"val1": "str53"
+	},
+	"pat": {
+		"val2": "str54"
+	}
   },
   "iat": {
     "val3": "str47"

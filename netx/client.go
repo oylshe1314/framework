@@ -8,6 +8,7 @@ import (
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/netx/codec"
+	"github.com/oylshe1314/framework/netx/heartbeat"
 	"github.com/oylshe1314/framework/netx/route"
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
@@ -21,7 +22,7 @@ type NetClient struct {
 
 	address net.Addr
 
-	mux *route.ConnMux
+	connMux *route.ConnMux
 
 	conn *conn
 }
@@ -63,13 +64,25 @@ func (this *NetClient) Init(ctx context.Context) error {
 		this.logger = log.NewNoneLogger()
 	}
 
-	this.mux = route.NewConnMux()
+	this.connMux = route.NewConnMux()
+
+	var heartbeatClientName = this.GetOption().Components.Get("heartbeatClient")
+	if heartbeatClientName != "" {
+		heartbeatClientName = "heartbeatClient"
+	}
+
+	var heartbeatClient = framework.ClientFromContext[*heartbeat.HeartbeatClient](ctx, heartbeatClientName)
+	if heartbeatClient != nil {
+		this.connMux.ConnectHandler(heartbeatClient.HandleConnect())
+		this.connMux.MessageHandler(heartbeatClient.HandleHeartbeat())
+	}
+
 	return nil
 }
 
 func (this *NetClient) Close() error {
 	if this.conn != nil {
-		this.mux.HandleDisconnect(this.conn)
+		this.connMux.HandleDisconnect(this.conn)
 		return this.conn.Close()
 	}
 	return nil
@@ -81,7 +94,7 @@ func (this *NetClient) Dial() error {
 		return err
 	}
 	this.conn = newConn(c, this.logger, this.codec)
-	this.mux.HandleConnect(this.conn)
+	this.connMux.HandleConnect(this.conn)
 	return nil
 }
 
@@ -99,7 +112,7 @@ func (this *NetClient) work() error {
 			return err
 		}
 	}
-	return this.conn.Serve(this.mux.HandleMessage)
+	return this.conn.Serve(this.connMux.HandleMessage)
 }
 
 func (this *NetClient) Work() error {
@@ -107,17 +120,17 @@ func (this *NetClient) Work() error {
 }
 
 func (this *NetClient) ConnectHandler(handler func(transport.Conn)) {
-	this.mux.ConnectHandler(handler)
+	this.connMux.ConnectHandler(handler)
 }
 
 func (this *NetClient) DisconnectHandler(handler func(transport.Conn)) {
-	this.mux.DisconnectHandler(handler)
+	this.connMux.DisconnectHandler(handler)
 }
 
 func (this *NetClient) DefaultHandler(handler transport.MessageHandleFunc) {
-	this.mux.DefaultHandler(handler)
+	this.connMux.DefaultHandler(handler)
 }
 
 func (this *NetClient) MessageHandler(command uint32, handler transport.MessageHandleFunc) {
-	this.mux.MessageHandler(command, handler)
+	this.connMux.MessageHandler(command, handler)
 }

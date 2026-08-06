@@ -20,6 +20,10 @@ type Message interface {
 	Read(any) error
 }
 
+type MessageBuilder interface {
+	Build() any
+}
+
 type MessageHandler interface {
 	Handle(Conn, Message)
 }

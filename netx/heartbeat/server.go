@@ -88,8 +88,8 @@ func (this *HeartbeatServer) Close() error {
 	return nil
 }
 
-func (this *HeartbeatServer) Add(conn transport.Conn) {
-	this.Remove(conn)
+func (this *HeartbeatServer) add(conn transport.Conn) {
+	this.remove(conn)
 	var slot = (int(this.ticks.Load()) + int(this.GetOption().Timeout) - 1) % int(this.GetOption().Timeout)
 
 	conn.Attribute().Put("slot", slot)
@@ -99,7 +99,7 @@ func (this *HeartbeatServer) Add(conn transport.Conn) {
 	this.slots[slot][conn] = struct{}{}
 }
 
-func (this *HeartbeatServer) Remove(conn transport.Conn) {
+func (this *HeartbeatServer) remove(conn transport.Conn) {
 	slot, ok := conn.Attribute().Get("slot")
 	if !ok {
 		return
@@ -116,7 +116,7 @@ func (this *HeartbeatServer) HeartbeatHandler(handler transport.MessageHandler) 
 
 func (this *HeartbeatServer) HandleHeartbeat() (uint32, transport.MessageHandleFunc) {
 	return this.GetOption().Command, func(conn transport.Conn, msg transport.Message) {
-		this.Add(conn)
+		this.add(conn)
 		if this.heartbeatHandler != nil {
 			this.heartbeatHandler.Handle(conn, msg)
 		} else {

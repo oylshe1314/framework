@@ -6,6 +6,15 @@ type HttpMux struct {
 	*gin.Engine
 }
 
-func NewHttpMux() *HttpMux {
-	return &HttpMux{Engine: gin.New()}
+func NewHttpMux(basePath string, htmlPath string) *HttpMux {
+	var engine = gin.New()
+	if basePath != "" {
+		engine.RouterGroup = *engine.Group(basePath)
+	}
+
+	if htmlPath != "" {
+		engine.LoadHTMLGlob(htmlPath)
+	}
+
+	return &HttpMux{Engine: engine}
 }

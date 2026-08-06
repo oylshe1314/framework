@@ -2,7 +2,7 @@ package log
 
 type Option struct {
 	Dir           string `json:"dir"`
-	Logger        string `json:"LoggerType"`
+	Logger        string `json:"logger"`
 	Level         string `json:"level"`
 	WithConsole   bool   `json:"console"`
 	WithTimestamp bool   `json:"withTimestamp"`

@@ -3,12 +3,15 @@ package jsonx
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/util"
 )
+
+type Object map[string]any
 
 func newReflectConvertError(s, t reflect.Type, err ...error) error {
 	if len(err) == 0 {
@@ -17,16 +20,6 @@ func newReflectConvertError(s, t reflect.Type, err ...error) error {
 		return errors.Error(fmt.Sprintf("cannot be converted from the type %s to %s, ", s.String(), t.String()), err[0])
 	}
 }
-
-type Object map[string]any
-
-//func (object Object) ToStruct(p any) error {
-//	buf, err := json.Marshal(object)
-//	if err != nil {
-//		return err
-//	}
-//	return json.Unmarshal(buf, p)
-//}
 
 func (obj Object) ToStruct(p any) error {
 	var pt = reflect.TypeOf(p)
@@ -56,13 +49,12 @@ func (obj Object) reflectToStruct(ppv reflect.Value) error {
 		}
 
 		var tag = sf.Tag.Get("json")
-
-		var tags []string
 		if tag == "-" {
 			continue
 		}
 
 		var name string
+		var tags []string
 		if tag == "" {
 			name = sf.Name
 		} else {
@@ -73,18 +65,9 @@ func (obj Object) reflectToStruct(ppv reflect.Value) error {
 			}
 		}
 
-		if sf.Anonymous || sf.Type.Kind() == reflect.Struct || (sf.Type.Kind() == reflect.Pointer && sf.Type.Elem().Kind() == reflect.Struct) {
-			var inline = false
-			if len(tags) >= 2 {
-				for tagIdx := range tags {
-					if tags[tagIdx] == "inline" {
-						inline = true
-					}
-				}
-			}
-
+		if sf.Anonymous {
 			var val map[string]any
-			if inline {
+			if slices.Contains(tags, "inline") {
 				val = obj
 			} else {
 				tmp, ok := obj[name]
@@ -107,7 +90,8 @@ func (obj Object) reflectToStruct(ppv reflect.Value) error {
 					}
 					if !fpp.Elem().IsNil() {
 						pv.Set(reflect.New(vt))
-						pv.Elem().Field(i).Set(fpp.Elem())
+						vv = pv.Elem()
+						vv.Field(i).Set(fpp.Elem())
 					}
 				} else {
 					var err = Object(val).reflectToStruct(vv.Field(i).Addr())
@@ -124,7 +108,8 @@ func (obj Object) reflectToStruct(ppv reflect.Value) error {
 					}
 					if !fpp.Elem().IsNil() {
 						pv.Set(reflect.New(vt))
-						pv.Elem().Field(i).Set(fpp.Elem())
+						vv = pv.Elem()
+						vv.Field(i).Set(fpp.Elem().Elem())
 					}
 				} else {
 					fpp.Elem().Set(vv.Field(i).Addr())
@@ -306,8 +291,8 @@ func reflectAnyToValue(val any, vv reflect.Value, ft reflect.Type) error {
 			switch tv := val.(type) {
 			case []any:
 				if vv.IsNil() {
-					var sv = reflect.MakeSlice(vt, len(tv), cap(tv))
 					var length = len(tv)
+					var sv = reflect.MakeSlice(vt, length, cap(tv))
 					for i := range length {
 						var iv = sv.Index(i)
 						var err = reflectAnyToValue(tv[i], iv, nil)

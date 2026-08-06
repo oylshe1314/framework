@@ -58,11 +58,7 @@ func (this *HttpServer) Init(ctx context.Context) error {
 		this.logger = log.NewNoneLogger()
 	}
 
-	this.httpMux = route.NewHttpMux()
-
-	if this.GetOption().HtmlPath != "" {
-		this.httpMux.LoadHTMLGlob(this.GetOption().HtmlPath)
-	}
+	this.httpMux = route.NewHttpMux(this.GetOption().BasePath, this.GetOption().HtmlPath)
 
 	this.httpServer = &http.Server{
 		Handler: this.httpMux.Handler(),
@@ -94,6 +90,10 @@ func (this *HttpServer) serve() error {
 
 func (this *HttpServer) Close() error {
 	return this.httpServer.Close()
+}
+
+func (this *HttpServer) Use(middleware ...gin.HandlerFunc) {
+	this.httpMux.Use(middleware...)
 }
 
 func (this *HttpServer) Handle(pattern string, handler gin.HandlerFunc) {

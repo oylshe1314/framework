@@ -20,6 +20,7 @@ func newFrameworkContext() *frameworkContext {
 	return &frameworkContext{
 		values:  store.NewConcurrent[any, any](),
 		servers: store.NewConcurrent[string, server.Server](),
+		clients: store.NewConcurrent[string, client.Client](),
 	}
 }
 
@@ -122,7 +123,7 @@ func ContextWithValue[Key comparable, Value any](ctx context.Context, k Key, v V
 	return ctx
 }
 
-func ValueFromContext[Value any](ctx context.Context, k any) (v Value) {
+func ValueFromContext[Key comparable, Value any](ctx context.Context, k Key) (v Value) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return

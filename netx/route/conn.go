@@ -18,10 +18,10 @@ type ConnHandler interface {
 }
 
 type ConnMux struct {
-	connectHandler    func(transport.Conn)
-	disconnectHandler func(transport.Conn)
-	defaultHandler    transport.MessageHandler
-	messageHandler    map[uint32]transport.MessageHandler
+	connectHandlers    []func(transport.Conn)
+	disconnectHandlers []func(transport.Conn)
+	defaultHandler     transport.MessageHandler
+	messageHandler     map[uint32]transport.MessageHandler
 }
 
 func NewConnMux() *ConnMux {
@@ -29,11 +29,11 @@ func NewConnMux() *ConnMux {
 }
 
 func (this *ConnMux) ConnectHandler(handler func(transport.Conn)) {
-	this.connectHandler = handler
+	this.connectHandlers = append(this.connectHandlers, handler)
 }
 
 func (this *ConnMux) DisconnectHandler(handler func(transport.Conn)) {
-	this.disconnectHandler = handler
+	this.disconnectHandlers = append(this.disconnectHandlers, handler)
 }
 
 func (this *ConnMux) DefaultHandler(handleFunc transport.MessageHandleFunc) {
@@ -45,14 +45,14 @@ func (this *ConnMux) MessageHandler(command uint32, handleFunc transport.Message
 }
 
 func (this *ConnMux) HandleConnect(conn transport.Conn) {
-	if this.connectHandler != nil {
-		this.connectHandler(conn)
+	for _, handler := range this.connectHandlers {
+		handler(conn)
 	}
 }
 
 func (this *ConnMux) HandleDisconnect(conn transport.Conn) {
-	if this.disconnectHandler != nil {
-		this.disconnectHandler(conn)
+	for _, handler := range this.disconnectHandlers {
+		handler(conn)
 	}
 }
 

@@ -58,7 +58,7 @@ func start(svr server.Server) int {
 		return 1
 	}
 
-	ProgramHash = allHash[0]
+	ProgramHash = allHash[0][:5]
 
 	opt, err := option.ReadJson(configFile)
 	if err != nil {
@@ -77,7 +77,7 @@ func start(svr server.Server) int {
 		return 1
 	}
 
-	ConfigHash = allHash[0]
+	ConfigHash = allHash[0][:5]
 
 	return run(svr, opt)
 }
@@ -118,10 +118,8 @@ func run(svr server.Server, opt option.Option) int {
 		}
 	}
 
-	fmt.Println("Program-Hash: ", ProgramHash)
-	fmt.Println("Data-Hash: ", DataHash)
-	fmt.Println("Config-Hash: ", ConfigHash)
-	fmt.Println("Profile-Active: ", profile.Active)
+	fmt.Printf("Server-Hash: %s-%s-%s\n", ProgramHash, DataHash, ConfigHash)
+	fmt.Println("Profile-Active:", profile.Active)
 
 	fmt.Println("Server startup")
 	for _, cc := range cs {

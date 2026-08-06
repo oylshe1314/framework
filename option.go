@@ -41,9 +41,38 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 		return nil, errors.New("set option should be a server or a client")
 	}
 
+	sm, ok := spt.MethodByName("SetOption")
+	if ok {
+		var mt = sm.Type
+		if mt.NumIn() != 2 {
+			return nil, errors.Errorf("invalid parameter of the server '%s' option set funcation", spt.String())
+		}
+
+		var at = mt.In(1)
+		if at.Kind() != reflect.Struct && at.Elem().Kind() != reflect.Struct {
+			return nil, errors.Errorf("the parameter of the server '%s' option set funcation should be a struct or struct pointer", spt.String())
+		}
+
+		if at.Kind() == reflect.Pointer {
+			var av = reflect.New(at.Elem())
+			err = jsonx.Object(opt).ToStruct(av.Interface())
+			if err != nil {
+				return nil, err
+			}
+
+			spv.Method(sm.Index).Call([]reflect.Value{av})
+		} else {
+			var av = reflect.New(at)
+			err = jsonx.Object(opt).ToStruct(av.Interface())
+			if err != nil {
+				return nil, err
+			}
+			spv.Method(sm.Index).Call([]reflect.Value{av.Elem()})
+		}
+	}
+
 	var st = spt.Elem()
 	var sv = spv.Elem()
-
 	for i := range st.NumField() {
 		var sf = st.Field(i)
 		if !sf.IsExported() {
@@ -97,45 +126,6 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 		}
 
 		cs = append(cs, scs...)
-	}
-
-	st = spt
-	sv = spv
-
-	sm, ok := st.MethodByName("SetOption")
-	if !ok {
-		st = st.Elem()
-		sv = sv.Elem()
-		sm, ok = st.MethodByName("SetOption")
-	}
-
-	if ok {
-		var mt = sm.Type
-		if mt.NumIn() != 2 {
-			return nil, errors.Errorf("invalid parameter of the server '%s' option set funcation", st.Name())
-		}
-
-		var at = mt.In(1)
-		if at.Kind() != reflect.Struct && at.Elem().Kind() != reflect.Struct {
-			return nil, errors.Errorf("the parameter of the server '%s' option set funcation should be a struct or struct pointer", st.Name())
-		}
-
-		if at.Kind() == reflect.Pointer {
-			var av = reflect.New(at.Elem())
-			err = jsonx.Object(opt).ToStruct(av.Interface())
-			if err != nil {
-				return nil, err
-			}
-
-			sv.Method(sm.Index).Call([]reflect.Value{av})
-		} else {
-			var av = reflect.New(at)
-			err = jsonx.Object(opt).ToStruct(av.Interface())
-			if err != nil {
-				return nil, err
-			}
-			sv.Method(sm.Index).Call([]reflect.Value{av.Elem()})
-		}
 	}
 
 	cs = append(cs, cc)
