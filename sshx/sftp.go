@@ -7,27 +7,19 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 )
 
 type SftpClient struct {
-	c  *ssh.Client
-	fc *sftp.Client
+	c *sftp.Client
 }
 
 func (this *SftpClient) Init(ctx context.Context) error {
-	fc, err := sftp.NewClient(this.c)
-	if err != nil {
-		return err
-	}
-
-	this.fc = fc
 	return nil
 }
 
 func (this *SftpClient) Close() error {
-	if this.fc != nil {
-		return this.fc.Close()
+	if this.c != nil {
+		return this.c.Close()
 	}
 	return nil
 }
@@ -50,19 +42,19 @@ func (this *SftpClient) Upload(localPath, remotePath string) error {
 	defer lf.Close()
 
 	if remotePath[len(remotePath)-1] == '/' {
-		err = this.fc.MkdirAll(remotePath)
+		err = this.c.MkdirAll(remotePath)
 		if err != nil {
 			return err
 		}
 		remotePath = filepath.Join(remotePath, filename)
 	} else {
-		err = this.fc.MkdirAll(filepath.Dir(remotePath))
+		err = this.c.MkdirAll(filepath.Dir(remotePath))
 		if err != nil {
 			return err
 		}
 	}
 
-	rf, err := this.fc.Create(remotePath)
+	rf, err := this.c.Create(remotePath)
 	if err != nil {
 		return err
 	}

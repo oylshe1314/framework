@@ -2,32 +2,16 @@ package sshx
 
 import (
 	"context"
-	"io"
 
 	"github.com/oylshe1314/framework/errors"
 	"golang.org/x/crypto/ssh"
 )
 
 type ShellClient struct {
-	in     io.Reader
-	out    io.Writer
-	errOut io.Writer
-
-	c *ssh.Client
 	s *ssh.Session
 }
 
 func (this *ShellClient) Init(ctx context.Context) error {
-	s, err := this.c.NewSession()
-	if err != nil {
-		return errors.Error("failed to create session: ", err)
-	}
-
-	this.s.Stdin = this.in
-	this.s.Stdout = this.out
-	this.s.Stderr = this.errOut
-
-	this.s = s
 	return nil
 }
 

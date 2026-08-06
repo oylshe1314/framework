@@ -9,6 +9,7 @@ import (
 
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/option"
+	"github.com/pkg/sftp"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -65,12 +66,8 @@ func (this *SshClient) Dial() error {
 	if opt.Key != "" {
 		key = []byte(opt.Key)
 	} else if opt.KeyPath != "" {
-		f, err := os.Open(opt.KeyPath)
-		if err != nil {
-			return err
-		}
-
-		key, err = io.ReadAll(f)
+		var err error
+		key, err = os.ReadFile(opt.KeyPath)
 		if err != nil {
 			return err
 		}
@@ -100,9 +97,7 @@ func (this *SshClient) Exec(args ...string) (string, error) {
 		return "", err
 	}
 
-	defer func() {
-		_ = s.Close()
-	}()
+	defer s.Close()
 
 	var out = new(bytes.Buffer)
 	var errOut = new(bytes.Buffer)
@@ -119,30 +114,27 @@ func (this *SshClient) Exec(args ...string) (string, error) {
 }
 
 func (this *SshClient) NewShellClient(in io.Reader, out, errOut io.Writer) (*ShellClient, error) {
-	var sc = &ShellClient{
-		in:     in,
-		out:    out,
-		errOut: errOut,
-		c:      this.c,
-	}
-
-	var err = sc.Init(context.Background())
+	s, err := this.c.NewSession()
 	if err != nil {
 		return nil, err
 	}
 
-	return sc, nil
+	s.Stdin = in
+	s.Stdout = out
+	s.Stderr = errOut
+
+	return &ShellClient{s: s}, nil
 }
 
 func (this *SshClient) NewSftpClient() (*SftpClient, error) {
-	var sc = &SftpClient{
-		c: this.c,
-	}
-
-	var err = sc.Init(context.Background())
+	c, err := sftp.NewClient(this.c)
 	if err != nil {
 		return nil, err
 	}
 
-	return sc, nil
+	return &SftpClient{c: c}, nil
+}
+
+func (this *SshClient) NewSshDialer() *SshDialer {
+	return &SshDialer{c: this.c}
 }
