@@ -15,7 +15,7 @@ type LoggerServer struct {
 
 func (this *LoggerServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("option is nil")
+		return errors.New("'LoggerServer' option is nil")
 	}
 
 	writer, err := NewFileWriter(this.GetOption())

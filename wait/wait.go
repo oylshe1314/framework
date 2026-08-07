@@ -2,16 +2,16 @@ package wait
 
 import "sync"
 
-func All[R any](blocks ...func() R) (rs []R) {
-	if len(blocks) > 0 {
-		rs = make([]R, len(blocks))
+func All[R any](fs ...func() R) (rs []R) {
+	if len(fs) > 0 {
+		rs = make([]R, len(fs))
 
 		var wg sync.WaitGroup
-		for i, f := range blocks {
+		for i, f := range fs {
 			wg.Add(1)
-			go func(i int, f func() R) {
+			go func(index int, f func() R) {
 				defer wg.Done()
-				rs[i] = f()
+				rs[index] = f()
 			}(i, f)
 		}
 		wg.Wait()

@@ -4,8 +4,9 @@ import (
 	"context"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
 
+	"github.com/oylshe1314/framework/errors"
 	"github.com/pkg/sftp"
 )
 
@@ -32,7 +33,7 @@ func (this *SftpClient) Close() error {
 //   - If it does NOT end with "/", it is treated as the full remote file path,
 //     allowing the caller to customize the remote file name.
 func (this *SftpClient) Upload(localPath, remotePath string) error {
-	var filename = filepath.Base(localPath)
+	var filename = path.Base(localPath)
 
 	lf, err := os.Open(localPath)
 	if err != nil {
@@ -46,9 +47,9 @@ func (this *SftpClient) Upload(localPath, remotePath string) error {
 		if err != nil {
 			return err
 		}
-		remotePath = filepath.Join(remotePath, filename)
+		remotePath = path.Join(remotePath, filename)
 	} else {
-		err = this.c.MkdirAll(filepath.Dir(remotePath))
+		err = this.c.MkdirAll(path.Dir(remotePath))
 		if err != nil {
 			return err
 		}
@@ -62,6 +63,69 @@ func (this *SftpClient) Upload(localPath, remotePath string) error {
 	defer rf.Close()
 
 	_, err = io.Copy(rf, lf)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (this *SftpClient) Download(localPath, remotePath string) error {
+	var filename = path.Base(localPath)
+
+	rf, err := this.c.Open(remotePath)
+	if err != nil {
+		return err
+	}
+
+	defer rf.Close()
+
+	if localPath[len(remotePath)-1] == '/' {
+		err = os.MkdirAll(localPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		localPath = path.Join(localPath, filename)
+	} else {
+		err = os.MkdirAll(path.Dir(localPath), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	lf, err := os.Create(localPath)
+	if err != nil {
+		return err
+	}
+
+	defer lf.Close()
+
+	_, err = io.Copy(lf, rf)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (this *SftpClient) Write(buff []byte, remoteFile string) error {
+	if remoteFile[len(remoteFile)-1] == '/' {
+		return errors.New("invalid remote filename")
+	}
+
+	var err = this.c.MkdirAll(path.Dir(remoteFile))
+	if err != nil {
+		return err
+	}
+
+	rf, err := this.c.Create(remoteFile)
+	if err != nil {
+		return err
+	}
+
+	defer rf.Close()
+
+	_, err = rf.Write(buff)
 	if err != nil {
 		return err
 	}

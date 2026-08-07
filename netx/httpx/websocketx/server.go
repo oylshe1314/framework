@@ -10,7 +10,6 @@ import (
 	"github.com/oylshe1314/framework/netx/codec"
 	"github.com/oylshe1314/framework/netx/httpx"
 	"github.com/oylshe1314/framework/netx/route"
-	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
 	"github.com/oylshe1314/framework/store"
 
@@ -33,7 +32,7 @@ type WebsocketServer struct {
 
 func (this *WebsocketServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("option is nil")
+		return errors.New("'WebsocketServer' option is nil")
 	}
 
 	var err error
@@ -107,7 +106,7 @@ func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.H
 			}()
 
 			handler.HandleConnect(cc)
-			_ = cc.Serve(transport.MessageHandleFunc(handler.HandleMessage))
+			_ = cc.Serve(handler.HandleMessage)
 		}()
 	}
 }

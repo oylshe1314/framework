@@ -28,7 +28,7 @@ type HttpServer struct {
 
 func (this *HttpServer) Init(ctx context.Context) error {
 	if this.GetOption() == nil {
-		return errors.New("option is nil")
+		return errors.New("'HttpServer' option is nil")
 	}
 
 	var err error
@@ -40,7 +40,7 @@ func (this *HttpServer) Init(ctx context.Context) error {
 	case "unix":
 		this.address, err = net.ResolveUnixAddr(this.GetOption().Network, this.GetOption().Address)
 	default:
-		return errors.Errorf("unknown network '%s'", this.GetOption().Network)
+		return errors.Errorf("'HttpServer' unknown network '%s'", this.GetOption().Network)
 	}
 	if err != nil {
 		return err
