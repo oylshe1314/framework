@@ -30,11 +30,11 @@ func NewStringCodec() Codec {
 	return stringCodec{}
 }
 
-func (codec stringCodec) Name() string {
+func (stringCodec) Name() string {
 	return "string"
 }
 
-func (codec stringCodec) Encode(v any) ([]byte, error) {
+func (stringCodec) Encode(v any) ([]byte, error) {
 	switch vt := v.(type) {
 	case []byte:
 		return vt, nil
@@ -47,7 +47,7 @@ func (codec stringCodec) Encode(v any) ([]byte, error) {
 	}
 }
 
-func (codec stringCodec) Decode(buf []byte, v any) error {
+func (stringCodec) Decode(buf []byte, v any) error {
 	switch vt := v.(type) {
 	case []byte:
 		copy(vt, buf)

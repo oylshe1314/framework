@@ -14,9 +14,9 @@ type SubConn interface {
 
 type Redis interface {
 	Close() error
-	Exec(ctx context.Context, cmd string, args ...interface{}) error
-	String(ctx context.Context, cmd string, args ...interface{}) (string, error)
-	Strings(ctx context.Context, cmd string, args ...interface{}) (Strings, error)
-	StringMap(ctx context.Context, cmd string, args ...interface{}) (StringMap, error)
+	Exec(ctx context.Context, cmd string, args ...any) error
+	String(ctx context.Context, cmd string, args ...any) (string, error)
+	Strings(ctx context.Context, cmd string, args ...any) (Strings, error)
+	StringMap(ctx context.Context, cmd string, args ...any) (StringMap, error)
 	Subscribe(ctx context.Context) SubConn
 }

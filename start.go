@@ -111,9 +111,9 @@ func run(svr server.Server, opt option.Option) int {
 		}
 
 		switch tc := cc.(type) {
-		case server.Component[server.Server]:
+		case server.Component:
 			ctx = ContextWithServer(ctx, tc.Name(), tc.Server())
-		case client.Component[client.Client]:
+		case client.Component:
 			ctx = ContextWithClient(ctx, tc.Name(), tc.Client())
 		}
 	}

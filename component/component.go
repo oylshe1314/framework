@@ -13,9 +13,9 @@ type Component interface {
 type ComponentsOption map[string]string
 
 func (cso ComponentsOption) Get(component string) string {
-	c, ok := cso[component]
+	name, ok := cso[component]
 	if !ok {
 		return ""
 	}
-	return c
+	return name
 }

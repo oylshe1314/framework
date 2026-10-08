@@ -6,33 +6,33 @@ import (
 	"github.com/oylshe1314/framework/component"
 )
 
-type Component[T Client] interface {
+type Component interface {
 	component.Component
 
-	Client() T
+	Client() Client
 }
 
-type clientComponent[T Client] struct {
+type clientComponent struct {
 	name   string
-	client T
+	client Client
 }
 
-func NewClientComponent[T Client](name string, client T) Component[T] {
-	return &clientComponent[T]{
+func NewClientComponent(name string, client Client) Component {
+	return &clientComponent{
 		name:   name,
 		client: client,
 	}
 }
 
-func (this *clientComponent[T]) Name() string {
+func (this *clientComponent) Name() string {
 	return this.name
 }
 
-func (this *clientComponent[T]) Init(ctx context.Context) error {
+func (this *clientComponent) Init(ctx context.Context) error {
 	return this.client.Init(ctx)
 }
 
-func (this *clientComponent[T]) Start() error {
+func (this *clientComponent) Start() error {
 	var ac, ok = any(this.client).(AsyncClient)
 	if !ok {
 		return nil
@@ -43,10 +43,10 @@ func (this *clientComponent[T]) Start() error {
 	return nil
 }
 
-func (this *clientComponent[T]) Close() error {
+func (this *clientComponent) Close() error {
 	return this.client.Close()
 }
 
-func (this *clientComponent[T]) Client() T {
+func (this *clientComponent) Client() Client {
 	return this.client
 }

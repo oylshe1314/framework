@@ -3,6 +3,7 @@ package websocketx
 import (
 	"context"
 	"net/http"
+	"slices"
 
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
@@ -81,12 +82,7 @@ func (this *WebsocketServer) checkOrigin(request *http.Request) bool {
 		return true
 	}
 	var origin = request.Header.Get("Origin")
-	for _, allowOrigin := range this.GetOption().AllowOrigins {
-		if origin == allowOrigin {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(this.GetOption().AllowOrigins, origin)
 }
 
 func (this *WebsocketServer) upgradeHandlerFunc(handler route.ConnHandler) gin.HandlerFunc {

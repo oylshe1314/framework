@@ -30,14 +30,14 @@ func (this *simpleClient) Close() error {
 	return this.client.Close()
 }
 
-func (this *simpleClient) Exec(ctx context.Context, cmd string, args ...interface{}) error {
-	args = append([]interface{}{cmd}, args...)
+func (this *simpleClient) Exec(ctx context.Context, cmd string, args ...any) error {
+	args = append([]any{cmd}, args...)
 	var dr = this.client.Do(ctx, args...)
 	return dr.Err()
 }
 
-func (this *simpleClient) String(ctx context.Context, cmd string, args ...interface{}) (string, error) {
-	args = append([]interface{}{cmd}, args...)
+func (this *simpleClient) String(ctx context.Context, cmd string, args ...any) (string, error) {
+	args = append([]any{cmd}, args...)
 	var c = redis.NewStringCmd(ctx, args...)
 	var err = this.client.Process(ctx, c)
 	if err != nil {
@@ -46,8 +46,8 @@ func (this *simpleClient) String(ctx context.Context, cmd string, args ...interf
 	return c.Result()
 }
 
-func (this *simpleClient) Strings(ctx context.Context, cmd string, args ...interface{}) (Strings, error) {
-	args = append([]interface{}{cmd}, args...)
+func (this *simpleClient) Strings(ctx context.Context, cmd string, args ...any) (Strings, error) {
+	args = append([]any{cmd}, args...)
 	var c = redis.NewStringSliceCmd(ctx, args...)
 	var err = this.client.Process(ctx, c)
 	if err != nil {
@@ -56,8 +56,8 @@ func (this *simpleClient) Strings(ctx context.Context, cmd string, args ...inter
 	return c.Result()
 }
 
-func (this *simpleClient) StringMap(ctx context.Context, cmd string, args ...interface{}) (StringMap, error) {
-	args = append([]interface{}{cmd}, args...)
+func (this *simpleClient) StringMap(ctx context.Context, cmd string, args ...any) (StringMap, error) {
+	args = append([]any{cmd}, args...)
 	var c = redis.NewMapStringStringCmd(ctx, args...)
 	var err = this.client.Process(ctx, c)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/oylshe1314/framework"
 	"github.com/oylshe1314/framework/errors"
@@ -16,7 +17,6 @@ import (
 	"github.com/oylshe1314/framework/srd"
 
 	"github.com/go-zookeeper/zk"
-	"github.com/google/uuid"
 )
 
 type RegisterClient struct {
@@ -64,11 +64,7 @@ func (this *RegisterClient) createNode(svr server.Server) error {
 
 	var guid = this.GetOption().Guid
 	if guid == "" {
-		id, err := uuid.NewV7()
-		if err != nil {
-			return err
-		}
-		guid = id.String()
+		guid = uuid.NewV7().String()
 		this.GetOption().Guid = guid
 	}
 

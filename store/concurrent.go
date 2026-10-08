@@ -3,16 +3,14 @@ package store
 import "sync"
 
 type concurrentStore[Key comparable, Value any] struct {
-	sync.RWMutex
 	store[Key, Value]
+	sync.RWMutex
 }
 
 func NewConcurrent[Key comparable, Value any]() Store[Key, Value] {
 	return &concurrentStore[Key, Value]{
+		m:       make(map[Key]Value),
 		RWMutex: sync.RWMutex{},
-		store: store[Key, Value]{
-			m: make(map[Key]Value),
-		},
 	}
 }
 

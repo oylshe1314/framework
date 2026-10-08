@@ -12,11 +12,11 @@ func NewProtobufCodec() Codec {
 	return protobufCodec{}
 }
 
-func (p protobufCodec) Name() string {
+func (protobufCodec) Name() string {
 	return "protobuf"
 }
 
-func (p protobufCodec) Encode(v any) ([]byte, error) {
+func (protobufCodec) Encode(v any) ([]byte, error) {
 	msg, ok := v.(proto.Message)
 	if !ok {
 		return nil, errors.New("not protobuf message")
@@ -24,7 +24,7 @@ func (p protobufCodec) Encode(v any) ([]byte, error) {
 	return proto.Marshal(msg)
 }
 
-func (p protobufCodec) Decode(buf []byte, v any) error {
+func (protobufCodec) Decode(buf []byte, v any) error {
 	msg, ok := v.(proto.Message)
 	if !ok {
 		return errors.New("not protobuf message")

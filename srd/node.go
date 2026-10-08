@@ -23,13 +23,11 @@ type NetNode struct {
 
 func NewNetNode(name, guid string, option *netx.Option) *ServiceNode {
 	return &ServiceNode{
-		NodeBase: NodeBase{
-			Type:    "net",
-			Name:    name,
-			Guid:    guid,
-			Network: option.Network,
-			Address: option.Address,
-		},
+		Type:    "net",
+		Name:    name,
+		Guid:    guid,
+		Network: option.Network,
+		Address: option.Address,
 		NetNode: &NetNode{
 			Codec: option.Codec,
 		},
@@ -43,13 +41,11 @@ type HttpNode struct {
 
 func NewHttpNode(name, guid string, option *httpx.Option) *ServiceNode {
 	return &ServiceNode{
-		NodeBase: NodeBase{
-			Type:    "http",
-			Name:    name,
-			Guid:    guid,
-			Network: option.Network,
-			Address: option.Address,
-		},
+		Type:    "http",
+		Name:    name,
+		Guid:    guid,
+		Network: option.Network,
+		Address: option.Address,
 		HttpNode: &HttpNode{
 			BasePath: option.BasePath,
 			Secure:   option.Tls != nil,
@@ -64,13 +60,11 @@ type WebsocketNode struct {
 
 func NewWebsocketNode(name, guid string, option *websocketx.Option) *ServiceNode {
 	return &ServiceNode{
-		NodeBase: NodeBase{
-			Type:    "websocket",
-			Name:    name,
-			Guid:    guid,
-			Network: option.Network,
-			Address: option.Address,
-		},
+		Type:    "websocket",
+		Name:    name,
+		Guid:    guid,
+		Network: option.Network,
+		Address: option.Address,
 		WebsocketNode: &WebsocketNode{
 			AllowOrigins: option.AllowOrigins,
 			Codec:        option.Codec,

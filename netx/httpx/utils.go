@@ -21,7 +21,7 @@ func (handler jsonResponseHandler) decode(res *http.Response, err error) error {
 	return handler(res)
 }
 
-func jsonResponseDecoder(data interface{}) responseDecoder {
+func jsonResponseDecoder(data any) responseDecoder {
 	return jsonResponseHandler(func(res *http.Response) error {
 		if res.StatusCode != http.StatusOK {
 			return StatusError(res.StatusCode, res.Status)
@@ -36,7 +36,7 @@ func jsonResponseDecoder(data interface{}) responseDecoder {
 	})
 }
 
-func JsonGet(url string, resData interface{}, headers ...http.Header) error {
+func JsonGet(url string, resData any, headers ...http.Header) error {
 	var req, err = http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func JsonGet(url string, resData interface{}, headers ...http.Header) error {
 	return jsonResponseDecoder(resData).decode(http.DefaultClient.Do(req))
 }
 
-func JsonPost(url string, reqData, resData interface{}, headers ...http.Header) error {
+func JsonPost(url string, reqData, resData any, headers ...http.Header) error {
 	var err error
 	var rb []byte
 	switch reqData.(type) {
@@ -90,7 +90,7 @@ func JsonPost(url string, reqData, resData interface{}, headers ...http.Header) 
 }
 
 // PostWhenTheContentTypeOfRequestIsUrlencodedButTheContentTypeOfResponseIsJson ??? (¯︵¯)
-func PostWhenTheContentTypeOfRequestIsUrlencodedButTheContentTypeOfResponseIsJson(url string, values url.Values, resData interface{}, headers ...http.Header) error {
+func PostWhenTheContentTypeOfRequestIsUrlencodedButTheContentTypeOfResponseIsJson(url string, values url.Values, resData any, headers ...http.Header) error {
 	var req, err = http.NewRequest(http.MethodPost, url, strings.NewReader(values.Encode()))
 	if err != nil {
 		return err

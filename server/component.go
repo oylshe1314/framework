@@ -6,40 +6,40 @@ import (
 	"github.com/oylshe1314/framework/component"
 )
 
-type Component[T Server] interface {
+type Component interface {
 	component.Component
 
-	Server() T
+	Server() Server
 }
 
-type serverComponent[T Server] struct {
+type serverComponent struct {
 	name   string
-	server T
+	server Server
 }
 
-func NewServerComponent[T Server](name string, server T) Component[T] {
-	return &serverComponent[T]{
+func NewServerComponent(name string, server Server) Component {
+	return &serverComponent{
 		name:   name,
 		server: server,
 	}
 }
 
-func (this *serverComponent[T]) Init(ctx context.Context) error {
+func (this *serverComponent) Init(ctx context.Context) error {
 	return this.server.Init(ctx)
 }
 
-func (this *serverComponent[T]) Start() error {
+func (this *serverComponent) Start() error {
 	return this.server.Start()
 }
 
-func (this *serverComponent[T]) Close() error {
+func (this *serverComponent) Close() error {
 	return this.server.Close()
 }
 
-func (this *serverComponent[T]) Name() string {
+func (this *serverComponent) Name() string {
 	return this.name
 }
 
-func (this *serverComponent[T]) Server() T {
+func (this *serverComponent) Server() Server {
 	return this.server
 }
