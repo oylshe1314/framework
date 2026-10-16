@@ -28,8 +28,8 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 	var err error
 	var cs []component.Component
 
-	var serverType = reflect.TypeOf((*server.Server)(nil)).Elem()
-	var clientType = reflect.TypeOf((*client.Client)(nil)).Elem()
+	var serverType = reflect.TypeFor[*server.Server]().Elem()
+	var clientType = reflect.TypeFor[*client.Client]().Elem()
 
 	var cc component.Component
 	switch {
@@ -45,12 +45,12 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 	if ok {
 		var mt = sm.Type
 		if mt.NumIn() != 2 {
-			return nil, errors.Errorf("invalid parameter of the server '%s' option set funcation", spt.String())
+			return nil, errors.Errorf("invalid parameter of the server '%s' option set function", spt.String())
 		}
 
 		var at = mt.In(1)
 		if at.Kind() != reflect.Struct && at.Elem().Kind() != reflect.Struct {
-			return nil, errors.Errorf("the parameter of the server '%s' option set funcation should be a struct or struct pointer", spt.String())
+			return nil, errors.Errorf("the parameter of the server '%s' option set function should be a struct or struct pointer", spt.String())
 		}
 
 		if at.Kind() == reflect.Pointer {

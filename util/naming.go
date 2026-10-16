@@ -45,8 +45,7 @@ func UpperCamelCase(s string) string {
 	return toCamelCase(s, -1)
 }
 
-// SplitCameCase 按驼峰切割
-func SplitCameCase(s string) []string {
+func splitCameCase(s string) []string {
 	var li = 0
 	var ss []string
 	var rs = []rune(s)
@@ -66,10 +65,10 @@ func SplitCameCase(s string) []string {
 
 // LowerSnakeCase 转小蛇型
 func LowerSnakeCase(s string) string {
-	return strings.ToLower(strings.Join(SplitCameCase(s), "_"))
+	return strings.ToLower(strings.Join(splitCameCase(s), "_"))
 }
 
 // UpperSnakeCase 转大蛇型
 func UpperSnakeCase(s string) string {
-	return strings.ToUpper(strings.Join(SplitCameCase(s), "_"))
+	return strings.ToUpper(strings.Join(splitCameCase(s), "_"))
 }

@@ -118,7 +118,6 @@ func (this *RegisterClient) dial(network, address string, timeout time.Duration)
 }
 
 func (this *RegisterClient) createParentNodes(conn *zk.Conn, path string) error {
-	var strPath string
 	var nodeNames = strings.Split(path, "/")
 
 	var i = 0
@@ -127,10 +126,7 @@ func (this *RegisterClient) createParentNodes(conn *zk.Conn, path string) error 
 	}
 
 	for ; i < len(nodeNames); i++ {
-		strPath += "/" + nodeNames[i]
-
-		_, err := conn.Create(strPath, []byte{}, 0, zk.WorldACL(zk.PermAll))
-
+		_, err := conn.Create("/"+nodeNames[i], []byte{}, 0, zk.WorldACL(zk.PermAll))
 		if err != nil && !errors.Is(err, zk.ErrNodeExists) && !errors.Is(err, zk.ErrNoAuth) {
 			return err
 		}

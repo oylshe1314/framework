@@ -14,7 +14,7 @@ type RedisOption struct {
 	Protocol        int           `json:"protocol"`
 	Username        string        `json:"username"`
 	Password        string        `json:"password"`
-	DB              int           `json:"DB"`
+	DB              int           `json:"db"`
 	ReadOnly        bool          `json:"readOnly"`
 	DialTimeout     time.Duration `json:"dialTimeout"`
 	ReadTimeout     time.Duration `json:"readTimeout"`

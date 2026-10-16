@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"slices"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -47,7 +48,7 @@ func start(svr server.Server) int {
 		return 0
 	}
 
-	CheckExpired()
+	checkExpired()
 
 	var err error
 	var allHash []string
@@ -144,9 +145,9 @@ func run(svr server.Server, opt option.Option) int {
 		stopped.Store(true)
 
 		// Server shutdown order: reverse of server startup
-		for i := len(cs) - 1; i >= 0; i-- {
+		for _, c := range slices.Backward(cs) {
 			time.Sleep(time.Millisecond * 100)
-			_ = cs[i].Close()
+			_ = c.Close()
 		}
 		cancel()
 	}()
