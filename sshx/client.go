@@ -107,7 +107,11 @@ func (this *SshClient) Exec(args ...string) (string, error) {
 
 	err = s.Run(strings.Join(args, " "))
 	if err != nil {
-		return errOut.String(), err
+		if errOut.Len() > 0 {
+			return errOut.String(), err
+		} else {
+			return out.String(), err
+		}
 	}
 
 	return out.String(), nil
