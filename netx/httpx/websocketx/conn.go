@@ -65,10 +65,8 @@ func (this *conn) read() (uint32, []byte, error) {
 
 func (this *conn) write(cmd uint32, body []byte) error {
 	var buf = make([]byte, transport.MessageHeadLength+len(body))
-
 	binary.LittleEndian.PutUint32(buf[:4], cmd)
 	binary.LittleEndian.PutUint32(buf[4:8], uint32(len(body)))
-
 	if len(body) > 0 {
 		copy(buf[8:], body)
 	}
