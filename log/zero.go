@@ -151,7 +151,7 @@ func newZeroLogger(writer io.Writer, option *Option) (Logger, error) {
 	}
 
 	if option.WithCaller {
-		zl.zl = zl.zl.With().CallerWithSkipFrameCount(5).Logger()
+		zl.zl = zl.zl.With().CallerWithSkipFrameCount(6).Logger()
 	}
 
 	return zl, nil

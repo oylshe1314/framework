@@ -75,6 +75,8 @@ func (this *RegisterClient) createNode(svr server.Server) error {
 		this.SetNode(srd.NewHttpNode(this.GetOption().Name, guid, s.GetOption()))
 	case *websocketx.WebsocketServer:
 		this.SetNode(srd.NewWebsocketNode(this.GetOption().Name, guid, s.GetOption()))
+	default:
+		return errors.New("it is not a server of 'NetServer' or 'HttpServer' or 'WebsocketServer' to register")
 	}
 	return nil
 }

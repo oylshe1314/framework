@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-func checkExpired() {
+func CheckExpiration() {
 	if util.NowUnix() >= expiration {
 		panic("The server has expired")
 	}

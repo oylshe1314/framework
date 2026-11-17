@@ -48,7 +48,7 @@ func start(svr server.Server) int {
 		return 0
 	}
 
-	checkExpired()
+	CheckExpiration()
 
 	var err error
 	var allHash []string
@@ -86,7 +86,7 @@ func start(svr server.Server) int {
 func run(svr server.Server, opt option.Option) int {
 
 	fmt.Println("Server set option")
-	var cs, err = Option(opt).setOption(svr)
+	var cs, err = ScanComponents(svr, opt)
 	if err != nil {
 		fmt.Println("Server init failed, ", err)
 		return 1
