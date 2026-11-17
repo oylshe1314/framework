@@ -23,5 +23,5 @@ func ProgramVersion(version string) {
 }
 
 func PrintVersion(writer io.Writer) {
-	_, _ = fmt.Fprintf(writer, "Version: %s with fromwork-%s, Built on %s %s/%s\n", programVersion, frameworkVersion, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	_, _ = fmt.Fprintf(writer, "Version: %s with framework-%s, Built on %s %s/%s\n", programVersion, frameworkVersion, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }
