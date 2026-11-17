@@ -100,14 +100,15 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 			componentName = util.LowerCamelCase(sf.Name)
 		}
 
-		var val = option.Option(opt).Get(componentName)
-		if val == nil {
-			continue
-		}
-
-		tmp, ok := val.(map[string]any)
-		if !ok {
-			return nil, errors.Errorf("can not set option '%s' of %s to server '%s' ", name, reflect.TypeOf(tmp).String(), sf.Name)
+		var subOpt option.Option
+		if opt != nil {
+			var val = option.Option(opt).Get(componentName)
+			if val != nil {
+				subOpt, ok = val.(map[string]any)
+				if !ok {
+					return nil, errors.Errorf("can not set option '%s' of %s to server '%s' ", name, reflect.TypeOf(subOpt).String(), sf.Name)
+				}
+			}
 		}
 
 		var fv = sv.Field(i)
@@ -120,7 +121,7 @@ func (opt Option) reflectSetOption(name string, spv reflect.Value, spt reflect.T
 		}
 
 		var scs []component.Component
-		scs, err = (Option(tmp)).reflectSetOption(componentName, fv, ft)
+		scs, err = (Option(subOpt)).reflectSetOption(componentName, fv, ft)
 		if err != nil {
 			return nil, err
 		}

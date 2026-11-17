@@ -21,6 +21,23 @@ type NetNode struct {
 	Codec string `json:"codec"`
 }
 
+type HttpNode struct {
+	BasePath string `json:"basePath"`
+	Secure   bool   `json:"secure"`
+}
+
+type WebsocketNode struct {
+	AllowOrigins []string `json:"allowOrigins"`
+	Codec        string   `json:"codec"`
+}
+
+type ServiceNode struct {
+	NodeBase       `json:",inline"`
+	*NetNode       `json:",inline"`
+	*HttpNode      `json:",inline"`
+	*WebsocketNode `json:",inline"`
+}
+
 func NewNetNode(name, guid string, option *netx.Option) *ServiceNode {
 	return &ServiceNode{
 		Type:    "net",
@@ -32,11 +49,6 @@ func NewNetNode(name, guid string, option *netx.Option) *ServiceNode {
 			Codec: option.Codec,
 		},
 	}
-}
-
-type HttpNode struct {
-	BasePath string `json:"basePath"`
-	Secure   bool   `json:"secure"`
 }
 
 func NewHttpNode(name, guid string, option *httpx.Option) *ServiceNode {
@@ -53,11 +65,6 @@ func NewHttpNode(name, guid string, option *httpx.Option) *ServiceNode {
 	}
 }
 
-type WebsocketNode struct {
-	AllowOrigins []string `json:"allowOrigins"`
-	Codec        string   `json:"codec"`
-}
-
 func NewWebsocketNode(name, guid string, option *websocketx.Option) *ServiceNode {
 	return &ServiceNode{
 		Type:    "websocket",
@@ -70,11 +77,4 @@ func NewWebsocketNode(name, guid string, option *websocketx.Option) *ServiceNode
 			Codec:        option.Codec,
 		},
 	}
-}
-
-type ServiceNode struct {
-	NodeBase       `json:",inline"`
-	*NetNode       `json:",inline"`
-	*HttpNode      `json:",inline"`
-	*WebsocketNode `json:",inline"`
 }

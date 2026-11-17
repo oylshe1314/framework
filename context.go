@@ -52,17 +52,18 @@ func ServerFromContext[T server.Server](ctx context.Context, name string) (s T) 
 	return s
 }
 
-func ServersFromContext[T server.Server](ctx context.Context) (ss []T) {
+func ServersFromContext[T server.Server](ctx context.Context) (ss map[string]T) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return
 	}
 
+	ss = map[string]T{}
 	frameworkCtx.servers.Foreach(func(name string, svr server.Server) {
 		var s T
 		s, ok = svr.(T)
 		if ok {
-			ss = append(ss, s)
+			ss[name] = s
 		}
 	})
 	return
@@ -96,17 +97,18 @@ func ClientFromContext[T client.Client](ctx context.Context, name string) (c T) 
 	return c
 }
 
-func ClientsFromContext[T client.Client](ctx context.Context) (cs []T) {
+func ClientsFromContext[T client.Client](ctx context.Context) (cs map[string]T) {
 	frameworkCtx, ok := ctx.Value(frameworkContextName).(*frameworkContext)
 	if !ok {
 		return
 	}
 
+	cs = map[string]T{}
 	frameworkCtx.servers.Foreach(func(name string, svr server.Server) {
 		var c T
 		c, ok = svr.(T)
 		if ok {
-			cs = append(cs, c)
+			cs[name] = c
 		}
 	})
 	return
