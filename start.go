@@ -20,12 +20,6 @@ import (
 	"github.com/oylshe1314/framework/util"
 )
 
-var (
-	ProgramHash = "EMPTY"
-	DataHash    = "EMPTY"
-	ConfigHash  = "EMPTY"
-)
-
 func Start(svr server.Server) {
 	os.Exit(start(svr))
 }
@@ -59,7 +53,7 @@ func start(svr server.Server) int {
 		return 1
 	}
 
-	ProgramHash = allHash[0][:5]
+	SetAppHash(allHash[0])
 
 	opt, err := option.ReadJson(configFile)
 	if err != nil {
@@ -78,7 +72,7 @@ func start(svr server.Server) int {
 		return 1
 	}
 
-	ConfigHash = allHash[0][:5]
+	SetConfigHash(allHash[0])
 
 	return run(svr, opt)
 }
@@ -119,8 +113,9 @@ func run(svr server.Server, opt option.Option) int {
 		}
 	}
 
-	fmt.Printf("Server-Hash: %s-%s-%s\n", ProgramHash, DataHash, ConfigHash)
-	fmt.Println("Profile-Active:", profile.Active)
+	appHash, configHash, dataHash = GetHash()
+	fmt.Printf("Server-Hash: %s-%s-%s\n", appHash, configHash, dataHash)
+	fmt.Printf("Profile-Active: %s\n", profile.Active)
 
 	fmt.Println("Server startup")
 	for _, cc := range cs {
