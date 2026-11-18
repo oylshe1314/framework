@@ -31,18 +31,18 @@ type RegisterClient struct {
 func (this *RegisterClient) extractNode(ctx context.Context) error {
 	var ss []server.Server
 	var ns = framework.ServersFromContext[*netx.NetServer](ctx)
-	for i := range ns {
-		ss = append(ss, ns[i])
+	for _, s := range ns {
+		ss = append(ss, s)
 	}
 
 	var hs = framework.ServersFromContext[*httpx.HttpServer](ctx)
-	for i := range hs {
-		ss = append(ss, hs[i])
+	for _, s := range hs {
+		ss = append(ss, s)
 	}
 
 	var ws = framework.ServersFromContext[*websocketx.WebsocketServer](ctx)
-	for i := range ws {
-		ss = append(ss, ws[i])
+	for _, s := range ws {
+		ss = append(ss, s)
 	}
 
 	if len(ss) == 0 {
@@ -70,11 +70,11 @@ func (this *RegisterClient) createNode(svr server.Server) error {
 
 	switch s := svr.(type) {
 	case *netx.NetServer:
-		this.node = srd.NewNetNode(this.GetOption().Name, guid, s.GetOption())
+		this.SetNode(srd.NewNetNode(this.GetOption().Name, guid, s.GetOption()))
 	case *httpx.HttpServer:
-		this.node = srd.NewHttpNode(this.GetOption().Name, guid, s.GetOption())
+		this.SetNode(srd.NewHttpNode(this.GetOption().Name, guid, s.GetOption()))
 	case *websocketx.WebsocketServer:
-		this.node = srd.NewWebsocketNode(this.GetOption().Name, guid, s.GetOption())
+		this.SetNode(srd.NewWebsocketNode(this.GetOption().Name, guid, s.GetOption()))
 	default:
 		return errors.New("it is not a server of 'NetServer' or 'HttpServer' or 'WebsocketServer' to register")
 	}

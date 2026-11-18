@@ -18,6 +18,18 @@ func (this *LoggerServer) Init(ctx context.Context) error {
 		return errors.New("'LoggerServer' option is nil")
 	}
 
+	if len(this.GetOption().Logger) == 0 {
+		return errors.New("'LoggerServer' option 'logger' is empty")
+	}
+
+	if this.GetOption().Dir == "" {
+		this.GetOption().Dir = "."
+	}
+
+	if this.GetOption().Level == "" {
+		this.GetOption().Level = InfoString
+	}
+
 	writer, err := NewFileWriter(this.GetOption())
 	if err != nil {
 		return err

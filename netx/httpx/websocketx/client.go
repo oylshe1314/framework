@@ -11,6 +11,7 @@ import (
 	"github.com/oylshe1314/framework/errors"
 	"github.com/oylshe1314/framework/log"
 	"github.com/oylshe1314/framework/netx/codec"
+	"github.com/oylshe1314/framework/netx/heartbeat"
 	"github.com/oylshe1314/framework/netx/route"
 	"github.com/oylshe1314/framework/netx/transport"
 	"github.com/oylshe1314/framework/option"
@@ -26,7 +27,7 @@ type WebsocketClient struct {
 
 	dialer *websocket.Dialer
 
-	mux *route.ConnMux
+	connMux *route.ConnMux
 
 	conn *conn
 }
@@ -78,13 +79,24 @@ func (this *WebsocketClient) Init(ctx context.Context) error {
 		Subprotocols:    this.GetOption().Protocols,
 	}
 
-	this.mux = route.NewConnMux()
+	this.connMux = route.NewConnMux()
+
+	var heartbeatClientName = this.GetOption().Components.Get("heartbeatClient")
+	if heartbeatClientName != "" {
+		heartbeatClientName = "heartbeatClient"
+	}
+
+	var heartbeatClient = framework.ClientFromContext[*heartbeat.HeartbeatClient](ctx, heartbeatClientName)
+	if heartbeatClient != nil {
+		this.connMux.ConnectHandler(heartbeatClient.HandleConnect())
+		this.connMux.MessageHandler(heartbeatClient.HandleHeartbeat())
+	}
 	return nil
 }
 
 func (this *WebsocketClient) Close() error {
 	if this.conn != nil {
-		this.mux.HandleDisconnect(this.conn)
+		this.connMux.HandleDisconnect(this.conn)
 		return this.conn.Close()
 	}
 	return nil
@@ -102,7 +114,7 @@ func (this *WebsocketClient) Dial() error {
 		return err
 	}
 	this.conn = newConn(c, this.logger, this.codec)
-	this.mux.HandleConnect(this.conn)
+	this.connMux.HandleConnect(this.conn)
 	return nil
 }
 
@@ -120,7 +132,7 @@ func (this *WebsocketClient) work() error {
 			return err
 		}
 	}
-	return this.conn.Serve(this.mux.HandleMessage)
+	return this.conn.Serve(this.connMux.HandleMessage)
 }
 
 func (this *WebsocketClient) Work() error {
@@ -128,17 +140,17 @@ func (this *WebsocketClient) Work() error {
 }
 
 func (this *WebsocketClient) ConnectHandler(handler func(transport.Conn)) {
-	this.mux.ConnectHandler(handler)
+	this.connMux.ConnectHandler(handler)
 }
 
 func (this *WebsocketClient) DisconnectHandler(handler func(transport.Conn)) {
-	this.mux.DisconnectHandler(handler)
+	this.connMux.DisconnectHandler(handler)
 }
 
 func (this *WebsocketClient) DefaultHandler(handler transport.MessageHandleFunc) {
-	this.mux.DefaultHandler(handler)
+	this.connMux.DefaultHandler(handler)
 }
 
 func (this *WebsocketClient) MessageHandler(command uint32, handler transport.MessageHandleFunc) {
-	this.mux.MessageHandler(command, handler)
+	this.connMux.MessageHandler(command, handler)
 }
